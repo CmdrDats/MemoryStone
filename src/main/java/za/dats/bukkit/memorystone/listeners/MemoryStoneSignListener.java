@@ -30,12 +30,13 @@ public class MemoryStoneSignListener extends BlockListener {
 	if (event.isCancelled()) {
 	    return;
 	}
-	
+
 	if (event.getBlock().getState() instanceof Sign) {
 	    final Sign state = (Sign) event.getBlock().getState();
-	    final MemoryStone stone = getMemoryStructureBehind(state);
+	    final MemoryStone stone = memoryStone.getMemoryStoneManager().getMemoryStructureBehind(state);
 	    if (stone != null) {
 		stone.setSign(null);
+		memoryStone.getStructureManager().saveStructures();
 	    }
 	}
     }
@@ -45,9 +46,9 @@ public class MemoryStoneSignListener extends BlockListener {
 	if (event.isCancelled()) {
 	    return;
 	}
-	
+
 	final Sign state = (Sign) event.getBlock().getState();
-	final MemoryStone stone = getMemoryStructureBehind(state);
+	final MemoryStone stone = memoryStone.getMemoryStoneManager().getMemoryStructureBehind(state);
 	if (stone != null) {
 	    if (stone.getSign() != null) {
 		event.setLine(0, Utility.color("&C") + "Memory Stone");
@@ -70,6 +71,7 @@ public class MemoryStoneSignListener extends BlockListener {
 		    Sign newSign = (Sign) new Location(state.getWorld(), state.getX(), state.getY(), state.getZ())
 			    .getBlock().getState();
 		    stone.setSign(newSign);
+		    memoryStone.getStructureManager().saveStructures();
 
 		}
 	    }, 2);
@@ -77,14 +79,6 @@ public class MemoryStoneSignListener extends BlockListener {
 	}
 
 	super.onSignChange(event);
-    }
-
-    private MemoryStone getMemoryStructureBehind(Sign sign) {
-	org.bukkit.material.Sign aSign = (org.bukkit.material.Sign) sign.getData();
-	Block behind = sign.getBlock().getRelative(aSign.getFacing().getOppositeFace());
-
-	MemoryStone stone = memoryStone.getMemoryStoneManager().getMemoryStoneAtBlock(behind);
-	return stone;
     }
 
     public void updateSign(Sign s) {

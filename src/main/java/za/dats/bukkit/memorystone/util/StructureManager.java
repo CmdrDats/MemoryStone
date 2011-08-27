@@ -61,6 +61,7 @@ public class StructureManager {
     public void registerEvents() {
 	blockListener.registerEvents();
 	loadStructureTypesOrDefault();
+	loadStructures();
     }
 
     public List<Structure> getStructures() {
@@ -287,6 +288,7 @@ public class StructureManager {
 	    log.warning("structure type's name is not set");
 	    return null;
 	}
+	prototype.setName(name);
 
 	String rotatorstr = node.getString("rotator", null);
 	if (rotatorstr == null) {
@@ -299,6 +301,7 @@ public class StructureManager {
 	    log.warning("structure type's rotator is not valid, using default");
 	    rotator = Rotator.getDefault();
 	}
+	prototype.setRotator(rotator);
 
 	List<ConfigurationNode> structuretypenodes = node.getNodeList("structure", new ArrayList<ConfigurationNode>());
 	if (structuretypenodes.isEmpty()) {

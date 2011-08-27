@@ -54,7 +54,7 @@ public class StructureBlockListener extends BlockListener {
 	    if (!totem.verifyStructure()) {
 		continue;
 	    }
-
+	    
 	    // check permissions!
 	    Player player = event.getPlayer();
 	    /*

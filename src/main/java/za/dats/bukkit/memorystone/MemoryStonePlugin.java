@@ -46,6 +46,4 @@ public class MemoryStonePlugin extends JavaPlugin {
     public MemoryStoneManager getMemoryStoneManager() {
         return memoryStoneManager;
     }
-
-    
 }
