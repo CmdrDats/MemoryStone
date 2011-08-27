@@ -5,13 +5,13 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.getspout.spoutapi.player.SpoutPlayer;
 
-import za.dats.bukkit.memorystone.MemoryStone;
+import za.dats.bukkit.memorystone.MemoryStonePlugin;
 
 public class EchoCommand implements CommandExecutor {
 
-    private final MemoryStone memoryStone;
+    private final MemoryStonePlugin memoryStone;
 
-    public EchoCommand(MemoryStone memoryStone) {
+    public EchoCommand(MemoryStonePlugin memoryStone) {
 	this.memoryStone = memoryStone;
     }
 

@@ -14,9 +14,9 @@ public class Utility {
 
 	private static Configuration LOCALE;
 
-	private static MemoryStone plugin;
+	private static MemoryStonePlugin plugin;
 
-	public static void init(MemoryStone inst) {
+	public static void init(MemoryStonePlugin inst) {
 		plugin = inst;
 		configure();
 	}

@@ -7,58 +7,84 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.material.Directional;
 import org.bukkit.material.MaterialData;
 
 import za.dats.bukkit.memorystone.MemoryStone;
+import za.dats.bukkit.memorystone.MemoryStonePlugin;
 import za.dats.bukkit.memorystone.Utility;
 
 public class MemoryStoneSignListener extends BlockListener {
 
-    private final MemoryStone memoryStone;
+    private final MemoryStonePlugin memoryStone;
 
-    public MemoryStoneSignListener(MemoryStone memoryStone) {
+    public MemoryStoneSignListener(MemoryStonePlugin memoryStone) {
 	this.memoryStone = memoryStone;
     }
 
     @Override
+    public void onBlockBreak(BlockBreakEvent event) {
+	if (event.isCancelled()) {
+	    return;
+	}
+	
+	if (event.getBlock().getState() instanceof Sign) {
+	    final Sign state = (Sign) event.getBlock().getState();
+	    final MemoryStone stone = getMemoryStructureBehind(state);
+	    if (stone != null) {
+		stone.setSign(null);
+	    }
+	}
+    }
+
+    @Override
     public void onSignChange(final SignChangeEvent event) {
-	event.getPlayer().sendMessage("Placed sign!");
-	if (!event.getLine(0).equals("MemoryStone")) {
+	if (event.isCancelled()) {
 	    return;
 	}
+	
+	final Sign state = (Sign) event.getBlock().getState();
+	final MemoryStone stone = getMemoryStructureBehind(state);
+	if (stone != null) {
+	    if (stone.getSign() != null) {
+		event.setLine(0, Utility.color("&C") + "Memory Stone");
+		event.setLine(1, Utility.color("&C[Broken]"));
+		return;
+	    }
 
-	if (event.getLine(1).length() == 0) {
-	    return;
-	}
+	    if (event.getLine(1).length() == 0) {
+		event.setLine(0, Utility.color("&C") + "Memory Stone");
+		event.setLine(1, Utility.color("&C[Broken]"));
+		return;
+	    }
 
-	if (checkMemoryStructureBehind((Sign) event.getBlock().getState())) {
-	    event.setLine(0, Utility.color("&A") + "[MemoryStone]");
+	    event.setLine(0, Utility.color("&A") + "Memory Stone");
 	    event.setLine(1, Utility.color("&E") + event.getLine(1));
+	    stone.setSign(state);
 	    memoryStone.getServer().getScheduler().scheduleSyncDelayedTask(memoryStone, new Runnable() {
 		public void run() {
-		    updateSign((Sign) event.getBlock().getState());
+		    updateSign(state);
+		    Sign newSign = (Sign) new Location(state.getWorld(), state.getX(), state.getY(), state.getZ())
+			    .getBlock().getState();
+		    stone.setSign(newSign);
+
 		}
 	    }, 2);
 	    event.getPlayer().sendMessage(Utility.color("&EMemory Stone created."));
-	} else {
-	    event.getPlayer().sendMessage(Utility.color("&CIncorrect structure for Memory Stone."));
-	    event.setLine(0, Utility.color("&C[Broken]"));
-	    return;
 	}
 
 	super.onSignChange(event);
     }
 
-    private boolean checkMemoryStructureBehind(Sign sign) {
+    private MemoryStone getMemoryStructureBehind(Sign sign) {
 	org.bukkit.material.Sign aSign = (org.bukkit.material.Sign) sign.getData();
 	Block behind = sign.getBlock().getRelative(aSign.getFacing().getOppositeFace());
-	if (behind.getType() == Material.DIRT) {
-	    return true;
-	}
-	return false;
+
+	MemoryStone stone = memoryStone.getMemoryStoneManager().getMemoryStoneAtBlock(behind);
+	return stone;
     }
 
     public void updateSign(Sign s) {
@@ -71,9 +97,9 @@ public class MemoryStoneSignListener extends BlockListener {
 	    ((Directional) m).setFacingDirection(f);
 	    s.setData(m);
 	    s.update(true);
-	    
+
 	    Sign newSign = (Sign) new Location(s.getWorld(), s.getX(), s.getY(), s.getZ()).getBlock().getState();
-	    newSign.setLine(0, Utility.color("&A") + "[MemoryStone]");
+	    newSign.setLine(0, Utility.color("&A") + "Memory Stone");
 	    newSign.setLine(1, Utility.color("&E") + name);
 	    newSign.update(true);
 	}

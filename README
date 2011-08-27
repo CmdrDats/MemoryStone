@@ -2,3 +2,14 @@ MemoryStone
 -----------
 
 This plugin for minecraft Bukkit lets you create Memory Stone structures. You can then memorize and teleport to and from memorized stones using your compass
+
+
+Credits
+-------
+
+Kudo's to :
+
+The Bukkit team
+The Spout team
+tprk77 for HealingTotem - I used his awesome structure code - this should really be in the Core Bukkit code.
+krinsdeath for ChestSync - I used some of his coding ideas and signage code.
