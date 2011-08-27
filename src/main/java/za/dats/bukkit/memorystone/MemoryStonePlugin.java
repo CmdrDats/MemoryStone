@@ -4,7 +4,6 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import za.dats.bukkit.memorystone.commands.EchoCommand;
 import za.dats.bukkit.memorystone.util.StructureManager;
 
 public class MemoryStonePlugin extends JavaPlugin {
@@ -12,6 +11,7 @@ public class MemoryStonePlugin extends JavaPlugin {
     private PluginManager pm;
     StructureManager structureManager = new StructureManager(this);
     MemoryStoneManager memoryStoneManager = new MemoryStoneManager(this);
+    CompassManager compassManager = new CompassManager(this);
 
     public void onDisable() {
     }
@@ -22,18 +22,17 @@ public class MemoryStonePlugin extends JavaPlugin {
 	pdf = getDescription();
 
 	System.out.println(pdf.getName() + " version " + pdf.getVersion() + " is enabled!");
-	getCommand("echo").setExecutor(new EchoCommand(this));
 	
 	structureManager.addStructureListener(memoryStoneManager);
 	structureManager.registerEvents();
 	
 	memoryStoneManager.registerEvents();
-	
+	compassManager.registerEvents();
 
     }
 
     public boolean hasSpout() {
-	if (getServer().getPluginManager().isPluginEnabled("Spout")) {
+	if (pm.isPluginEnabled("Spout")) {
 	    return true;
 	}
 	return false;
@@ -45,5 +44,9 @@ public class MemoryStonePlugin extends JavaPlugin {
 
     public MemoryStoneManager getMemoryStoneManager() {
         return memoryStoneManager;
+    }
+    
+    public CompassManager getCompassManager() {
+	return compassManager;
     }
 }

@@ -7,9 +7,3 @@ description: >
              Build Memory Stones out of Stone and Obsidian and a Sign to name it
              Tap a Memory Stone with your compass to memorize its location
              Right click with a compass to select a memorized stone to teleport to
-commands:
-  echo:
-    description: Just an echo test
-    usage: |
-           /<command> [text]
-           Example: /<command> Bukkit - echo's Bukkit
