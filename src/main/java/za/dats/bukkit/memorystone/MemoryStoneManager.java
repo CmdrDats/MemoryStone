@@ -173,7 +173,8 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	    final Sign state = (Sign) event.getBlock().getState();
 	    final MemoryStone stone = getMemoryStructureBehind(state);
 	    if (stone != null) {
-		namedMap.remove(state.getLine(1));
+		memoryStonePlugin.getCompassManager().forgetStone(stone.getName());
+		namedMap.remove(stone.getName());
 		stone.setSign(null);
 		memoryStonePlugin.getStructureManager().saveStructures();
 	    }

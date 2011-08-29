@@ -85,10 +85,6 @@ public class StructureBlockListener extends BlockListener {
 	    structureManager.addStructure(event, totem);
 	    structureManager.saveStructures();
 
-	    // if (!this.plugin.getConfigManager().isQuiet()) {
-	    player.sendMessage(ChatColor.DARK_AQUA + "A totem has been built.");
-	    // }
-
 	}
     }
 
@@ -123,7 +119,6 @@ public class StructureBlockListener extends BlockListener {
 	    // TODO add REPLACE code?
 	    structureManager.removeStructure(event, structure);
 	    structureManager.saveStructures();
-	    player.sendMessage(ChatColor.DARK_AQUA + "A "+structure.getStructureType().getName()+" has been destroyed.");
 	}
 
 	//if (!this.plugin.getConfigManager().isQuiet()) {
