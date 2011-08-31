@@ -13,6 +13,8 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import za.dats.bukkit.memorystone.Config;
+import za.dats.bukkit.memorystone.Utility;
 import za.dats.bukkit.memorystone.util.structure.Structure;
 import za.dats.bukkit.memorystone.util.structure.StructureType;
 
@@ -47,20 +49,21 @@ public class StructureBlockListener extends BlockListener {
 	Block placedblock = event.getBlockPlaced();
 	List<StructureType> totemtypes = structureManager.getStructureTypes();
 
-	TOTEMBUILD: 
-	for (StructureType totemtype : totemtypes) {
+	TOTEMBUILD: for (StructureType totemtype : totemtypes) {
 
 	    Structure totem = new Structure(totemtype, placedblock, owner);
 	    if (!totem.verifyStructure()) {
 		continue;
 	    }
-	    
+
 	    // check permissions!
 	    Player player = event.getPlayer();
-	    /*
-	     * if (!player.hasPermission("healingtotem.build")) { event.setCancelled(true);
-	     * player.sendMessage(ChatColor.RED + "You do not have permission to build totems."); return; }
-	     */
+
+	    if (!player.hasPermission("memorystone.build")) {
+		event.setCancelled(true);
+		player.sendMessage(Config.getColorLang("nobuildpermission"));
+		return;
+	    }
 
 	    // check the number of totems
 	    /*
@@ -78,9 +81,9 @@ public class StructureBlockListener extends BlockListener {
 	    }
 
 	    // lightning strike!
-	    // if (this.plugin.getConfigManager().isLightning()) {
-	    placedblock.getWorld().strikeLightningEffect(placedblock.getLocation());
-	    // }
+	    if (Config.useLightning()) {
+		placedblock.getWorld().strikeLightningEffect(placedblock.getLocation());
+	    }
 
 	    structureManager.addStructure(event, totem);
 	    structureManager.saveStructures();
@@ -100,20 +103,18 @@ public class StructureBlockListener extends BlockListener {
 	    return;
 
 	Player player = event.getPlayer();
-	
+
 	// check permissions!
-	/*
-	if (!player.hasPermission("healingtotem.break")) {
+	if (!player.hasPermission("memorystone.break")) {
 	    event.setCancelled(true);
-	    player.sendMessage(ChatColor.RED + "You do not have permission to break structures.");
+	    player.sendMessage(Config.getColorLang("nobreakpermission"));
 	    return;
 	}
-	*/
 
 	// lightning strike!
-	//if (this.plugin.getConfigManager().isLightning()) {
+	if (Config.useLightning()) {
 	    brokenblock.getWorld().strikeLightningEffect(brokenblock.getLocation());
-	//}
+	}
 
 	for (Structure structure : totems) {
 	    // TODO add REPLACE code?
@@ -121,7 +122,7 @@ public class StructureBlockListener extends BlockListener {
 	    structureManager.saveStructures();
 	}
 
-	//if (!this.plugin.getConfigManager().isQuiet()) {
-	//}
+	// if (!this.plugin.getConfigManager().isQuiet()) {
+	// }
     }
 }

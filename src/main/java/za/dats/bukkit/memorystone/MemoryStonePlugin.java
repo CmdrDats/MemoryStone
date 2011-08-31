@@ -1,8 +1,12 @@
 package za.dats.bukkit.memorystone;
 
+import org.bukkit.event.Event.Type;
+import org.bukkit.event.world.ChunkPopulateEvent;
+import org.bukkit.generator.BlockPopulator;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.getspout.spoutapi.inventory.CraftingInventory;
 
 import za.dats.bukkit.memorystone.util.StructureManager;
 
@@ -18,6 +22,8 @@ public class MemoryStonePlugin extends JavaPlugin {
 
     public void onEnable() {
 	Utility.init(this);
+	Config.init(this);
+	
 	pm = getServer().getPluginManager();
 	pdf = getDescription();
 
@@ -28,7 +34,6 @@ public class MemoryStonePlugin extends JavaPlugin {
 	
 	memoryStoneManager.registerEvents();
 	compassManager.registerEvents();
-
     }
 
     public boolean hasSpout() {

@@ -45,14 +45,13 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	pm = memoryStonePlugin.getServer().getPluginManager();
 	pm.registerEvent(Event.Type.SIGN_CHANGE, this, Event.Priority.Normal, memoryStonePlugin);
 	pm.registerEvent(Event.Type.BLOCK_BREAK, this, Event.Priority.Normal, memoryStonePlugin);
-
     }
 
     public void structurePlaced(BlockPlaceEvent event, Structure structure) {
 	MemoryStone stone = new MemoryStone();
 	stone.setStructure(structure);
 	structureMap.put(structure, stone);
-	event.getPlayer().sendMessage("Built Memory Stone!");
+	event.getPlayer().sendMessage(Utility.color(Config.getLang("createConfirm")));
     }
 
     public void structureDestroyed(BlockBreakEvent event, Structure structure) {
@@ -60,9 +59,9 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	Sign sign = stone.getSign();
 	if (stone.getName() != null) {
 	    namedMap.remove(stone.getName());
-	    memoryStonePlugin.getCompassManager().forgetStone(stone.getName());
+	    memoryStonePlugin.getCompassManager().forgetStone(stone.getName(), true);
 	}
-	
+
 	if (sign != null) {
 	    BlockState state = new Location(sign.getWorld(), sign.getX(), sign.getY(), sign.getZ()).getBlock()
 		    .getState();
@@ -70,20 +69,19 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	    if (state instanceof Sign) {
 		Sign newSign = (Sign) new Location(sign.getWorld(), sign.getX(), sign.getY(), sign.getZ()).getBlock()
 			.getState();
-		newSign.setLine(0, Utility.color("&C") + "Memory Stone");
-		newSign.setLine(1, Utility.color("&C[Broken]"));
+		newSign.setLine(0, Config.getColorLang("signboard"));
+		newSign.setLine(1, Config.getColorLang("broken"));
 		newSign.update(true);
 	    }
-	    
+
 	    stone.setSign(null);
 	}
-	
+
 	structureMap.remove(structure);
-	event.getPlayer().sendMessage("Destroyed Memory Stone!");
+	event.getPlayer().sendMessage(Utility.color(Config.getLang("destroyed")));
     }
 
     public void structureLoaded(Structure structure, ConfigurationNode node) {
-	System.out.println("Loading Memory Stone Structure");
 	MemoryStone stone = new MemoryStone();
 	stone.setStructure(structure);
 	structureMap.put(structure, stone);
@@ -92,7 +90,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	if (stone.getName() != null && stone.getName().length() > 0) {
 	    namedMap.put(stone.getName(), stone);
 	}
-	
+
 	if (node.getProperty("signx") != null) {
 	    Sign newSign = (Sign) new Location(structure.getWorld(), node.getInt("signx", 0), node.getInt("signy", 0),
 		    node.getInt("signz", 0)).getBlock().getState();
@@ -102,7 +100,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 
     public void structureSaving(Structure structure, Map<String, Object> yamlMap) {
 	MemoryStone memoryStone = structureMap.get(structure);
-	
+
 	yamlMap.put("name", memoryStone.getName());
 	if (memoryStone.getSign() != null) {
 	    Sign sign = memoryStone.getSign();
@@ -117,8 +115,8 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	StructureType.Prototype proto;
 
 	proto = new StructureType.Prototype();
-	for (int x=0; x<3; x++) {
-	    for (int z=0; z<3; z++) {
+	for (int x = 0; x < 3; x++) {
+	    for (int z = 0; z < 3; z++) {
 		proto.addBlock(x, 0, z, Material.STONE);
 	    }
 	}
@@ -161,8 +159,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
     public MemoryStone getNamedMemoryStone(String name) {
 	return namedMap.get(name);
     }
-    
-    
+
     @Override
     public void onBlockBreak(BlockBreakEvent event) {
 	if (event.isCancelled()) {
@@ -173,7 +170,18 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	    final Sign state = (Sign) event.getBlock().getState();
 	    final MemoryStone stone = getMemoryStructureBehind(state);
 	    if (stone != null) {
-		memoryStonePlugin.getCompassManager().forgetStone(stone.getName());
+		// check permissions!
+		if (!event.getPlayer().hasPermission("memorystone.break")) {
+		    event.setCancelled(true);
+		    event.getPlayer().sendMessage(Config.getColorLang("nobreakpermission"));
+		    
+		    state.setLine(0, Config.getColorLang("signboard"));
+		    state.setLine(1, stone.getName());
+		    state.update(true);
+		    return;
+		}
+
+		memoryStonePlugin.getCompassManager().forgetStone(stone.getName(), true);
 		namedMap.remove(stone.getName());
 		stone.setSign(null);
 		memoryStonePlugin.getStructureManager().saveStructures();
@@ -190,26 +198,32 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	final Sign state = (Sign) event.getBlock().getState();
 	final MemoryStone stone = getMemoryStructureBehind(state);
 	if (stone != null) {
+	    // check permissions!
+	    if (!event.getPlayer().hasPermission("memorystone.build")) {
+		event.getPlayer().sendMessage(Config.getColorLang("nobuildpermission"));
+		return;
+	    }
+
 	    if (stone.getSign() != null) {
-		event.setLine(0, Utility.color("&C") + "Memory Stone");
-		event.setLine(1, Utility.color("&C[Broken]"));
+		event.setLine(0, Config.getColorLang("signboard"));
+		event.setLine(1, Config.getColorLang("broken"));
 		return;
 	    }
 
 	    if (event.getLine(0).length() == 0) {
-		event.setLine(0, Utility.color("&C") + "Memory Stone");
-		event.setLine(1, Utility.color("&C[Broken]"));
+		event.setLine(0, Config.getColorLang("signboard"));
+		event.setLine(1, Config.getColorLang("broken"));
 		return;
 	    }
 
 	    String name = event.getLine(0);
 	    if (namedMap.containsKey(name)) {
-		event.setLine(0, Utility.color("&C") + "Memory Stone");
-		event.setLine(1, Utility.color("&C[Duplicate]"));
+		event.setLine(0, Config.getColorLang("signboard"));
+		event.setLine(1, Config.getColorLang("duplicate"));
 		return;
 	    }
-	    
-	    event.setLine(0, Utility.color("&A") + "Memory Stone");
+
+	    event.setLine(0, Config.getColorLang("signboard"));
 	    event.setLine(1, name);
 	    stone.setSign(state);
 	    namedMap.put(name, stone);
@@ -223,7 +237,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 
 		}
 	    }, 2);
-	    event.getPlayer().sendMessage(Utility.color("&EMemory Stone created."));
+	    event.getPlayer().sendMessage(Utility.color(Config.getLang("signAdded")));
 	}
 
 	super.onSignChange(event);
@@ -241,7 +255,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	    s.update(true);
 
 	    Sign newSign = (Sign) new Location(s.getWorld(), s.getX(), s.getY(), s.getZ()).getBlock().getState();
-	    newSign.setLine(0, Utility.color("&A") + "Memory Stone");
+	    newSign.setLine(0, Config.getColorLang("signboard"));
 	    newSign.setLine(1, name);
 	    newSign.update(true);
 	}

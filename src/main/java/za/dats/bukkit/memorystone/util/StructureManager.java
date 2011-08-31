@@ -216,45 +216,7 @@ public class StructureManager {
 	for (StructureType structureType : types) {
 	    yamllist.add(structureType2yaml(structureType));
 	}
-	/*
-	 * StructureType totemtype; StructureType structuretype; StructureType.Prototype proto;
-	 * 
-	 * proto = new StructureType.Prototype(); proto.addBlock(0, 0, 0, Material.COBBLESTONE); proto.addBlock(0, 1, 0,
-	 * Material.COBBLESTONE); proto.addBlock(0, 2, 0, Material.COBBLESTONE); proto.addBlock(0, 3, 0,
-	 * Material.LAPIS_BLOCK); proto.addBlock(0, 4, 0, Material.LAPIS_BLOCK); structuretype = new
-	 * StructureType(proto); totemtype = new StructureType("minor", 1, 15.0, structuretype, Rotator.NONE);
-	 * yamllist.add(this.structureType2yaml(totemtype));
-	 * 
-	 * proto = new StructureType.Prototype(); proto.addBlock(0, 0, 0, Material.IRON_BLOCK); proto.addBlock(0, 1, 0,
-	 * Material.IRON_BLOCK); proto.addBlock(0, 2, 0, Material.IRON_BLOCK); proto.addBlock(0, 3, 0,
-	 * Material.GOLD_BLOCK); proto.addBlock(0, 4, 0, Material.GOLD_BLOCK); structuretype = new StructureType(proto);
-	 * totemtype = new StructureType("normal", 1, 30.0, structuretype, Rotator.NONE);
-	 * yamllist.add(this.structureType2yaml(totemtype));
-	 * 
-	 * proto = new StructureType.Prototype(); proto.addBlock(0, 0, 0, Material.IRON_BLOCK); proto.addBlock(0, 1, 0,
-	 * Material.IRON_BLOCK); proto.addBlock(0, 2, 0, Material.IRON_BLOCK); proto.addBlock(0, 3, 0,
-	 * Material.GOLD_BLOCK); proto.addBlock(0, 4, 0, Material.DIAMOND_BLOCK); structuretype = new
-	 * StructureType(proto); totemtype = new StructureType("major", 2, 45.0, structuretype, Rotator.NONE);
-	 * yamllist.add(this.structureType2yaml(totemtype));
-	 * 
-	 * proto = new StructureType.Prototype(); proto.addBlock(0, 0, 0, Material.IRON_BLOCK); proto.addBlock(0, 1, 0,
-	 * Material.IRON_BLOCK); proto.addBlock(0, 2, 0, Material.IRON_BLOCK); proto.addBlock(0, 3, 0,
-	 * Material.DIAMOND_BLOCK); proto.addBlock(0, 4, 0, Material.DIAMOND_BLOCK); structuretype = new
-	 * StructureType(proto); totemtype = new StructureType("super", 2, 75.0, structuretype, Rotator.NONE);
-	 * yamllist.add(this.structureType2yaml(totemtype));
-	 * 
-	 * proto = new StructureType.Prototype(); proto.addBlock(0, 0, 0, Material.COBBLESTONE); proto.addBlock(0, 1, 0,
-	 * Material.COBBLESTONE); proto.addBlock(0, 2, 0, Material.COBBLESTONE); proto.addBlock(0, 3, 0,
-	 * Material.JACK_O_LANTERN); proto.addBlock(0, 4, 0, Material.JACK_O_LANTERN); structuretype = new
-	 * StructureType(proto); totemtype = new StructureType("evilminor", -1, 15.0, structuretype, Rotator.NONE);
-	 * yamllist.add(this.structureType2yaml(totemtype));
-	 * 
-	 * proto = new StructureType.Prototype(); proto.addBlock(0, 0, 0, Material.NETHERRACK); proto.addBlock(0, 1, 0,
-	 * Material.NETHERRACK); proto.addBlock(0, 2, 0, Material.NETHERRACK); proto.addBlock(0, 3, 0,
-	 * Material.GLOWSTONE); proto.addBlock(0, 4, 0, Material.GLOWSTONE); structuretype = new StructureType(proto);
-	 * totemtype = new StructureType("evilnormal", -1, 30.0, structuretype, Rotator.NONE);
-	 * yamllist.add(this.structureType2yaml(totemtype));
-	 */
+	
 	conf.setProperty("structuretypes", yamllist);
 	conf.save();
     }

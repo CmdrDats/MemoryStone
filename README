@@ -3,11 +3,30 @@ MemoryStone
 
 This plugin for minecraft Bukkit lets you create Memory Stone structures. You can then memorize and teleport to and from memorized stones using your compass
 
+ChangeLog:
+----------
+
+1.0.2
+	- Implemented Permissions
+	- Tweak event handling so that it works cleaner with doors and other interactables
+	- Teleport other player by right-clicking on them while holding your compass
+
+1.0.1
+	- Configuration File
+	- Fizzle cooldown time
+	- Compass item configurable
+	- Compass max uses configurable
+	- Lightning effect configurable
+	- Externalize strings to config file.
+
+1.0.0
+	- Initial Release
+
 
 Credits
 -------
 
-Kudo's to :
+Kudos to :
 
 The Bukkit team
 The Spout team
