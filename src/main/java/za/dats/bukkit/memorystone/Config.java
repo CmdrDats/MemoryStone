@@ -34,6 +34,7 @@ public class Config {
 	defaults.put("lightningEffect", true);
 	defaults.put("cooldownTime", 10);
 	defaults.put("fizzleCooldownTime", 5);
+	defaults.put("castingTime", 3);
 	
 	defaults.put("lang.createConfirm", "&EBuilt Memory Stone!");
 	defaults.put("lang.destroyed", "&EDestroyed Memory Stone!");
@@ -45,6 +46,10 @@ public class Config {
 	defaults.put("lang.startrecall", "Starting recall to <name>");
 	defaults.put("lang.cancelled", "Recall cancelled");
 	defaults.put("lang.chargesleft", "You have <numcharges> left");
+	defaults.put("lang.consumed", "You have worn your compass out!");
+	defaults.put("lang.teleportingother", "Teleporting <name> to <destination>");
+	defaults.put("lang.teleportedbyother", "<name> is teleporting you to <destination>");
+	defaults.put("lang.teleporting", "Teleporting to <destination>");
 	
 	defaults.put("lang.nobuildpermission", "&EYou do not have permission to build memory stones.");
 	defaults.put("lang.nobreakpermission", "&EYou do not have permission to break memory stones.");
@@ -112,5 +117,9 @@ public class Config {
     
     public static int getFizzleCooldownTime() {
 	return conf.getInt("fizzleCooldownTime", 5);
+    }
+
+    public static int getCastingTime() {
+	return conf.getInt("castingTime", 3);
     }
 }

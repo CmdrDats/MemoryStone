@@ -6,10 +6,26 @@ This plugin for minecraft Bukkit lets you create Memory Stone structures. You ca
 ChangeLog:
 ----------
 
+1.0.4
+	- Fixed up the direction the player faces and exact position after teleporting (thanks 
+	- Cleaned up logging
+	
+1.0.3
+	- Flip left and right click so that teleport is consistient.
+	- SpoutCraft teleport selector screen instead of cycling, if client has SpoutCraft installed
+	- Ignore when interacting with crafting table and furnace
+	- New global memory stone - Expensive, but everyone always has it memorized. (9 Gold blocks, slabs around it sans center piece, 3 obsidian pillar in the middle with diamond block on top)
+	- Added permission for zero cooldown.
+	- Added permission to use instantly (no casting time)
+	- Added op permission to quickly get free, instant, cooldown-less teleporting
+	- Fixed plugin.yml version number
+	
 1.0.2
 	- Implemented Permissions
 	- Tweak event handling so that it works cleaner with doors and other interactables
 	- Teleport other player by right-clicking on them while holding your compass
+	- Workaround for right clicking on doors.
+	- Charges are now immediately consumed, to prevent an item-switching bug.
 
 1.0.1
 	- Configuration File
@@ -19,7 +35,7 @@ ChangeLog:
 	- Lightning effect configurable
 	- Externalize strings to config file.
 
-1.0.0
+1.0.0 
 	- Initial Release
 
 
@@ -32,3 +48,4 @@ The Bukkit team
 The Spout team
 tprk77 for HealingTotem - I used his awesome structure code - this should really be in the Core Bukkit code.
 krinsdeath for ChestSync - I used some of his coding ideas and signage code.
+ne0nx3r0 and Specops343 of BlueTelepad - Their code helped me get the yaw and pitch correct.

@@ -49,8 +49,11 @@ public class StructureManager {
     HashMap<BlockHashable, Set<Structure>> blockhash;
     HashMap<String, Set<Structure>> ownerhash;
 
-    public StructureManager(JavaPlugin plugin) {
+    private final String logPrefix;
+
+    public StructureManager(JavaPlugin plugin, String logPrefix) {
 	this.plugin = plugin;
+	this.logPrefix = logPrefix;
 	this.structureTypes = new ArrayList<StructureType>();
 	this.structures = new ArrayList<Structure>();
 	this.blockhash = new HashMap<BlockHashable, Set<Structure>>();
@@ -164,7 +167,7 @@ public class StructureManager {
 		structureTypesFile.createNewFile();
 		this.saveDefaultStructureTypes();
 	    } catch (Exception ex) {
-		log.warning("could not create file " + structureTypesFile.getName());
+		log.warning(logPrefix+"could not create file " + structureTypesFile.getName());
 	    }
 	}
 
@@ -182,7 +185,7 @@ public class StructureManager {
 	for (ConfigurationNode node : nodelist) {
 	    StructureType structureType = this.yaml2StructureType(node);
 	    if (structureType == null) {
-		log.warning("a structure type couldn't be loaded");
+		log.warning(logPrefix+"a structure type couldn't be loaded");
 	    } else {
 		this.structureTypes.add(structureType);
 	    }
@@ -199,7 +202,7 @@ public class StructureManager {
 	});
 	Collections.reverse(this.structureTypes);
 
-	log.info("loaded " + this.structureTypes.size() + " structure types");
+	log.info(logPrefix+"loaded " + this.structureTypes.size() + " structure types");
     }
 
     private void saveDefaultStructureTypes() {
@@ -216,16 +219,17 @@ public class StructureManager {
 	for (StructureType structureType : types) {
 	    yamllist.add(structureType2yaml(structureType));
 	}
-	
+
 	conf.setProperty("structuretypes", yamllist);
 	conf.save();
     }
 
-    private Map<String, Object> structureType2yaml(StructureType totemtype) {
+    private Map<String, Object> structureType2yaml(StructureType structuretype) {
 	HashMap<String, Object> yamlmap = new HashMap<String, Object>();
-	yamlmap.put("name", totemtype.getName());
-	yamlmap.put("rotator", totemtype.getRotator().toString());
-	yamlmap.put("structure", this.structureTypePattern2yaml(totemtype));
+	yamlmap.put("name", structuretype.getName());
+	yamlmap.put("rotator", structuretype.getRotator().toString());
+	yamlmap.put("structure", this.structureTypePattern2yaml(structuretype));
+	yamlmap.put("metadata", structuretype.getMetadata());
 	return yamlmap;
     }
 
@@ -247,27 +251,27 @@ public class StructureManager {
 	StructureType.Prototype prototype = new StructureType.Prototype();
 	String name = node.getString("name", null);
 	if (name == null) {
-	    log.warning("structure type's name is not set");
+	    log.warning(logPrefix+"Structure type's name is not set");
 	    return null;
 	}
 	prototype.setName(name);
 
 	String rotatorstr = node.getString("rotator", null);
 	if (rotatorstr == null) {
-	    log.warning("structure type's rotator is not set");
+	    log.warning(logPrefix+"Structure type's rotator is not set");
 	    rotatorstr = ":(";
 	}
 
 	Rotator rotator = Rotator.matchRotator(rotatorstr);
 	if (rotator == null) {
-	    log.warning("structure type's rotator is not valid, using default");
+	    log.warning(logPrefix+"Structure type's rotator is not valid, using default");
 	    rotator = Rotator.getDefault();
 	}
 	prototype.setRotator(rotator);
 
 	List<ConfigurationNode> structuretypenodes = node.getNodeList("structure", new ArrayList<ConfigurationNode>());
 	if (structuretypenodes.isEmpty()) {
-	    log.warning("structure type's structure is not set");
+	    log.warning(logPrefix+"Structure type's structure is not set");
 	    return null;
 	}
 
@@ -276,24 +280,26 @@ public class StructureManager {
 	    int y = structureNode.getInt("y", Integer.MIN_VALUE);
 	    int z = structureNode.getInt("z", Integer.MIN_VALUE);
 	    if (x == Integer.MIN_VALUE || y == Integer.MIN_VALUE || z == Integer.MIN_VALUE) {
-		log.warning("structure's x, y, or z is not set");
+		log.warning(logPrefix+"Structure's x, y, or z is not set");
 	    }
 
 	    String materialstr = structureNode.getString("material", null);
 	    if (materialstr == null) {
-		log.warning("structure's material is not set");
+		log.warning(logPrefix+"Structure's material is not set");
 	    }
 
 	    Material material = Material.matchMaterial(materialstr);
 	    if (material == null) {
-		log.warning("structure's material is not recognized");
+		log.warning(logPrefix+"Structure's material is not recognized");
 	    }
 
 	    prototype.addBlock(x, y, z, material);
 	}
 
+	prototype.setMetadata((Map<String, String>) node.getProperty("metadata"));
+
 	if (prototype.getBlockCount() < 3) {
-	    log.warning("for technical reasons, the structure's block count must be at least 3");
+	    log.warning(logPrefix+"For technical reasons, the structure's block count must be at least 3");
 	    return null;
 	}
 
@@ -312,24 +318,24 @@ public class StructureManager {
 	for (ConfigurationNode node : nodelist) {
 	    Structure structure = this.yaml2Structure(node);
 
-	    for (StructureListener listener : listeners) {
-		listener.structureLoaded(structure, node);
-	    }
-
 	    if (structure == null) {
-		log.warning("a structure couldn't be loaded");
+		log.warning(logPrefix+"A structure couldn't be loaded");
 	    } else {
+		for (StructureListener listener : listeners) {
+		    listener.structureLoaded(structure, node);
+		}
+
 		this.addStructure(null, structure);
 	    }
 	}
 
-	log.info("loaded " + this.structures.size() + " structure");
+	log.info(logPrefix+"Loaded " + this.structures.size() + " structure(s)");
     }
 
     public void saveStructures() {
 
-	File totemsfile = new File(this.plugin.getDataFolder(), this.structures_filename);
-	Configuration conf = new Configuration(totemsfile);
+	File structuresfile = new File(this.plugin.getDataFolder(), this.structures_filename);
+	Configuration conf = new Configuration(structuresfile);
 
 	List<Object> yamllist = new ArrayList<Object>();
 
@@ -343,7 +349,7 @@ public class StructureManager {
 	    yamllist.add(structure2yaml);
 	}
 
-	log.info("saved " + this.structures.size() + " structures");
+	log.info(logPrefix+"Saved " + this.structures.size() + " structures");
 
 	conf.setProperty("structures", yamllist);
 	conf.save();
@@ -366,9 +372,10 @@ public class StructureManager {
     }
 
     private Structure yaml2Structure(ConfigurationNode node) {
+	String name = node.getString("name", "structure");
 	String worldstr = node.getString("world", null);
 	if (worldstr == null) {
-	    log.warning("totem's world is not set");
+	    log.warning(logPrefix+name+": world is not set");
 	    return null;
 	}
 
@@ -376,13 +383,13 @@ public class StructureManager {
 	int y = node.getInt("y", Integer.MIN_VALUE);
 	int z = node.getInt("z", Integer.MIN_VALUE);
 	if (x == Integer.MIN_VALUE || y == Integer.MIN_VALUE || z == Integer.MIN_VALUE) {
-	    log.warning("totem's x, y, or z is not set");
+	    log.warning(logPrefix+name+": x, y, or z is not set");
 	    return null;
 	}
 
 	String structureTypeStr = node.getString("type", null);
 	if (structureTypeStr == null) {
-	    log.warning("totem's type is not set");
+	    log.warning(logPrefix+name+": type is not set");
 	    return null;
 	}
 
@@ -394,21 +401,20 @@ public class StructureManager {
 
 	World world = this.plugin.getServer().getWorld(worldstr);
 	if (world == null) {
-	    log.warning("totem's world is not recognized");
+	    log.warning(logPrefix+name+": world is not recognized");
 	    return null;
 	}
 
 	StructureType structureType = this.getStructureType(structureTypeStr);
 	if (structureType == null) {
-	    log.warning("totem's type is not recognized");
+	    log.warning(logPrefix+name+": type of "+structureTypeStr+" is not recognized");
 	    return null;
 	}
 
 	Block block = world.getBlockAt(x, y, z);
 	Structure structure = new Structure(structureType, block, owner);
-
 	if (!structure.verifyStructure()) {
-	    log.warning("totem's structure was bad");
+	    log.warning(logPrefix+name+": structure was bad");
 	    return null;
 	}
 

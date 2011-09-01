@@ -35,6 +35,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
     private final MemoryStonePlugin memoryStonePlugin;
     private HashMap<Structure, MemoryStone> structureMap = new HashMap<Structure, MemoryStone>();
     private HashMap<String, MemoryStone> namedMap = new HashMap<String, MemoryStone>();
+    private List<String> globalStones = new ArrayList<String>();
 
     public MemoryStoneManager(MemoryStonePlugin memoryStonePlugin) {
 	this.memoryStonePlugin = memoryStonePlugin;
@@ -60,6 +61,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	if (stone.getName() != null) {
 	    namedMap.remove(stone.getName());
 	    memoryStonePlugin.getCompassManager().forgetStone(stone.getName(), true);
+	    globalStones.remove(stone.getName());
 	}
 
 	if (sign != null) {
@@ -89,12 +91,21 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	stone.setName(node.getString("name", ""));
 	if (stone.getName() != null && stone.getName().length() > 0) {
 	    namedMap.put(stone.getName(), stone);
+	    if ("true".equals(structure.getStructureType().getMetadata().get("global"))) {
+		globalStones.add(stone.getName());
+	    }
 	}
 
 	if (node.getProperty("signx") != null) {
-	    Sign newSign = (Sign) new Location(structure.getWorld(), node.getInt("signx", 0), node.getInt("signy", 0),
-		    node.getInt("signz", 0)).getBlock().getState();
-	    stone.setSign(newSign);
+	    try {
+		Sign newSign = (Sign) new Location(structure.getWorld(), node.getInt("signx", 0), node.getInt("signy",
+			0), node.getInt("signz", 0)).getBlock().getState();
+		stone.setSign(newSign);
+
+	    } catch (Exception e) {
+		memoryStonePlugin.getCompassManager().forgetStone(stone.getName(), false);
+		stone.setName("");
+	    }
 	}
     }
 
@@ -125,8 +136,40 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	proto.addBlock(1, 3, 1, Material.OBSIDIAN);
 	proto.setName("Memory Stone");
 	proto.setRotator(Rotator.NONE);
+	proto.addMetadata("global", "false");
 	structuretype = new StructureType(proto);
+	types.add(structuretype);
 
+	proto = new StructureType.Prototype();
+	for (int x = 0; x < 3; x++) {
+	    for (int z = 0; z < 3; z++) {
+		proto.addBlock(x + 1, 0, z + 1, Material.GOLD_BLOCK);
+	    }
+	}
+
+	for (int x = 0; x < 5; x++) {
+	    if (x == 2) {
+		continue;
+	    }
+	    proto.addBlock(x, 0, 0, Material.STEP);
+	    proto.addBlock(x, 0, 4, Material.STEP);
+	}
+	for (int z = 1; z < 4; z++) {
+	    if (z == 2) {
+		continue;
+	    }
+	    proto.addBlock(0, 0, z, Material.STEP);
+	    proto.addBlock(4, 0, z, Material.STEP);
+	}
+
+	proto.addBlock(2, 1, 2, Material.OBSIDIAN);
+	proto.addBlock(2, 2, 2, Material.OBSIDIAN);
+	proto.addBlock(2, 3, 2, Material.OBSIDIAN);
+	proto.addBlock(2, 4, 2, Material.DIAMOND_BLOCK);
+	proto.setName("Global Stone");
+	proto.setRotator(Rotator.NONE);
+	proto.addMetadata("global", "true");
+	structuretype = new StructureType(proto);
 	types.add(structuretype);
     }
 
@@ -162,10 +205,6 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 
     @Override
     public void onBlockBreak(BlockBreakEvent event) {
-	if (event.isCancelled()) {
-	    return;
-	}
-
 	if (event.getBlock().getState() instanceof Sign) {
 	    final Sign state = (Sign) event.getBlock().getState();
 	    final MemoryStone stone = getMemoryStructureBehind(state);
@@ -174,7 +213,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 		if (!event.getPlayer().hasPermission("memorystone.break")) {
 		    event.setCancelled(true);
 		    event.getPlayer().sendMessage(Config.getColorLang("nobreakpermission"));
-		    
+
 		    state.setLine(0, Config.getColorLang("signboard"));
 		    state.setLine(1, stone.getName());
 		    state.update(true);
@@ -183,6 +222,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 
 		memoryStonePlugin.getCompassManager().forgetStone(stone.getName(), true);
 		namedMap.remove(stone.getName());
+		globalStones.remove(stone.getName());
 		stone.setSign(null);
 		memoryStonePlugin.getStructureManager().saveStructures();
 	    }
@@ -226,7 +266,11 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	    event.setLine(0, Config.getColorLang("signboard"));
 	    event.setLine(1, name);
 	    stone.setSign(state);
+	    stone.setName(name);
 	    namedMap.put(name, stone);
+	    if ("true".equals(stone.getStructure().getStructureType().getMetadata().get("global"))) {
+		globalStones.add(name);
+	    }
 	    memoryStonePlugin.getServer().getScheduler().scheduleSyncDelayedTask(memoryStonePlugin, new Runnable() {
 		public void run() {
 		    updateSign(state);
@@ -260,5 +304,9 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	    newSign.update(true);
 	}
 
+    }
+    
+    public List<String> getGlobalStones() {
+	return globalStones;
     }
 }

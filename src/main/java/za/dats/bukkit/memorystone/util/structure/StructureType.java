@@ -59,6 +59,18 @@ public class StructureType {
 	    metadata.put(key, value);
 	}
 	
+	public Map<String, String> getMetadata() {
+	    return metadata;
+	}
+
+	public void setMetadata(Map<String, String> metadata) {
+	    if (metadata == null) {
+		this.metadata.clear();
+		return;
+	    }
+	    this.metadata = metadata;
+	}
+
 	public int getBlockCount() {
 	    return protopattern.size();
 	}
@@ -138,7 +150,7 @@ public class StructureType {
 	    Material m = this.pattern.get(b);
 	    s = s + "{x: " + b.x + ", y: " + b.y + ", z: " + b.z + ", type: " + m + "}, ";
 	}
-	return "[" + s + "]";
+	return "["+name+": " + s + "]";
     }
 
     public String getName() {

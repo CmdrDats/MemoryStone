@@ -1,39 +1,56 @@
 package za.dats.bukkit.memorystone;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bukkit.event.Event.Type;
 import org.bukkit.event.world.ChunkPopulateEvent;
 import org.bukkit.generator.BlockPopulator;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.getspout.spoutapi.event.screen.ScreenListener;
 import org.getspout.spoutapi.inventory.CraftingInventory;
 
+import sun.security.action.GetLongAction;
+
+import za.dats.bukkit.memorystone.ui.SpoutLocationPopupManager;
 import za.dats.bukkit.memorystone.util.StructureManager;
 
 public class MemoryStonePlugin extends JavaPlugin {
     private PluginDescriptionFile pdf;
     private PluginManager pm;
-    StructureManager structureManager = new StructureManager(this);
-    MemoryStoneManager memoryStoneManager = new MemoryStoneManager(this);
-    CompassManager compassManager = new CompassManager(this);
-
+    private StructureManager structureManager = new StructureManager(this, "[MemoryStone] ");
+    private MemoryStoneManager memoryStoneManager = new MemoryStoneManager(this);
+    private CompassManager compassManager = new CompassManager(this);
+    private SpoutLocationPopupManager spoutLocationPopupManager = new SpoutLocationPopupManager(this);
+    
     public void onDisable() {
     }
 
+    public void info(String log) {
+	getServer().getLogger().info("[MemoryStone] "+log);
+    }
+    
+    public void warn(String log) {
+	getServer().getLogger().warning("[MemoryStone] "+log);
+    }
+    
+    
     public void onEnable() {
 	Utility.init(this);
 	Config.init(this);
-	
 	pm = getServer().getPluginManager();
 	pdf = getDescription();
 
-	System.out.println(pdf.getName() + " version " + pdf.getVersion() + " is enabled!");
+	info(pdf.getName() + " version " + pdf.getVersion() + " is enabled!");
 	
 	structureManager.addStructureListener(memoryStoneManager);
 	structureManager.registerEvents();
 	
 	memoryStoneManager.registerEvents();
 	compassManager.registerEvents();
+	spoutLocationPopupManager.registerEvents();
     }
 
     public boolean hasSpout() {
@@ -54,4 +71,10 @@ public class MemoryStonePlugin extends JavaPlugin {
     public CompassManager getCompassManager() {
 	return compassManager;
     }
+
+    public SpoutLocationPopupManager getSpoutLocationPopupManager() {
+        return spoutLocationPopupManager;
+    }
+  
+    
 }

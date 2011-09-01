@@ -85,6 +85,7 @@ public class StructureBlockListener extends BlockListener {
 		placedblock.getWorld().strikeLightningEffect(placedblock.getLocation());
 	    }
 
+	    totem.setOwner(event.getPlayer().getName());
 	    structureManager.addStructure(event, totem);
 	    structureManager.saveStructures();
 
