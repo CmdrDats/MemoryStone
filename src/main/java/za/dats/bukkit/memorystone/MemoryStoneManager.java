@@ -1,10 +1,12 @@
 package za.dats.bukkit.memorystone;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -25,7 +27,9 @@ import org.bukkit.material.Directional;
 import org.bukkit.material.MaterialData;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.util.config.ConfigurationNode;
+import org.getspout.spoutapi.inventory.CraftingInventory;
 
+import za.dats.bukkit.memorystone.MemoryStone.StoneType;
 import za.dats.bukkit.memorystone.util.StructureListener;
 import za.dats.bukkit.memorystone.util.structure.Rotator;
 import za.dats.bukkit.memorystone.util.structure.Structure;
@@ -35,7 +39,9 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
     private final MemoryStonePlugin memoryStonePlugin;
     private HashMap<Structure, MemoryStone> structureMap = new HashMap<Structure, MemoryStone>();
     private HashMap<String, MemoryStone> namedMap = new HashMap<String, MemoryStone>();
-    private List<String> globalStones = new ArrayList<String>();
+    private HashMap<String, Set<MemoryStone>> worldStones = new HashMap<String, Set<MemoryStone>>();
+    private List<MemoryStone> globalStones = new ArrayList<MemoryStone>();
+    private List<MemoryStone> noTeleportStones = new ArrayList<MemoryStone>();
 
     public MemoryStoneManager(MemoryStonePlugin memoryStonePlugin) {
 	this.memoryStonePlugin = memoryStonePlugin;
@@ -51,19 +57,29 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
     public void structurePlaced(BlockPlaceEvent event, Structure structure) {
 	MemoryStone stone = new MemoryStone();
 	stone.setStructure(structure);
+	
 	structureMap.put(structure, stone);
-	event.getPlayer().sendMessage(Utility.color(Config.getLang("createConfirm")));
+	
+	if (stone.getType().equals(StoneType.NOTELEPORT)) {
+	    noTeleportStones.add(stone);
+	}
+	event.getPlayer().sendMessage(Utility.color(Config.getColorLang("createConfirm", "name", structure.getStructureType().getName())));
     }
 
     public void structureDestroyed(BlockBreakEvent event, Structure structure) {
 	MemoryStone stone = structureMap.get(structure);
-	Sign sign = stone.getSign();
+	if (stone.getType().equals(StoneType.NOTELEPORT)) {
+	    noTeleportStones.remove(stone);
+	}
+	    
 	if (stone.getName() != null) {
-	    namedMap.remove(stone.getName());
 	    memoryStonePlugin.getCompassManager().forgetStone(stone.getName(), true);
-	    globalStones.remove(stone.getName());
+	    globalStones.remove(stone);
+	    removeWorldStone(stone);
+	    namedMap.remove(stone.getName());
 	}
 
+	Sign sign = stone.getSign();
 	if (sign != null) {
 	    BlockState state = new Location(sign.getWorld(), sign.getX(), sign.getY(), sign.getZ()).getBlock()
 		    .getState();
@@ -80,20 +96,27 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	}
 
 	structureMap.remove(structure);
-	event.getPlayer().sendMessage(Utility.color(Config.getLang("destroyed")));
+	event.getPlayer().sendMessage(Utility.color(Config.getColorLang("destroyed")));
     }
 
     public void structureLoaded(Structure structure, ConfigurationNode node) {
 	MemoryStone stone = new MemoryStone();
 	stone.setStructure(structure);
+	
+	if (stone.getType().equals(StoneType.NOTELEPORT)) {
+	    noTeleportStones.add(stone);
+	}
+	
 	structureMap.put(structure, stone);
 
 	stone.setName(node.getString("name", ""));
 	if (stone.getName() != null && stone.getName().length() > 0) {
 	    namedMap.put(stone.getName(), stone);
-	    if ("true".equals(structure.getStructureType().getMetadata().get("global"))) {
-		globalStones.add(stone.getName());
+	    if (stone.isGlobal()) {
+		globalStones.add(stone);
 	    }
+	    
+	    addWorldStone(stone);
 	}
 
 	if (node.getProperty("signx") != null) {
@@ -107,6 +130,27 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 		stone.setName("");
 	    }
 	}
+    }
+
+    private void addWorldStone(MemoryStone stone) {
+	String worldName = stone.getStructure().getWorld().getName();
+	Set<MemoryStone> set = worldStones.get(worldName);
+	if (set == null) {
+	    set = new TreeSet<MemoryStone>();
+	    worldStones.put(worldName, set);
+	}
+	
+	set.add(stone);
+    }
+    
+    private void removeWorldStone(MemoryStone stone) {
+	String worldName = stone.getStructure().getWorld().getName();
+	Set<MemoryStone> set = worldStones.get(worldName);
+	if (set == null) {
+	    return;
+	}
+	
+	set.remove(stone);
     }
 
     public void structureSaving(Structure structure, Map<String, Object> yamlMap) {
@@ -136,10 +180,31 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	proto.addBlock(1, 3, 1, Material.OBSIDIAN);
 	proto.setName("Memory Stone");
 	proto.setRotator(Rotator.NONE);
+	proto.addMetadata("type", "MEMORYSTONE");
 	proto.addMetadata("global", "false");
+	proto.addMetadata("permissionRequired", "memorystone.create.local");
+	proto.addMetadata("distanceLimit", "512");
 	structuretype = new StructureType(proto);
 	types.add(structuretype);
 
+	proto = new StructureType.Prototype();
+	for (int x = 0; x < 3; x++) {
+	    for (int z = 0; z < 3; z++) {
+		proto.addBlock(x, 0, z, Material.IRON_BLOCK);
+	    }
+	}
+	proto.addBlock(1, 1, 1, Material.OBSIDIAN);
+	proto.addBlock(1, 2, 1, Material.OBSIDIAN);
+	proto.addBlock(1, 3, 1, Material.OBSIDIAN);
+	proto.setName("Crossworld Stone");
+	proto.setRotator(Rotator.NONE);
+	proto.addMetadata("type", "MEMORYSTONE");
+	proto.addMetadata("crossworld", "true");
+	proto.addMetadata("permissionRequired", "memorystone.create.crossworld");
+	proto.addMetadata("distanceLimit", "512");
+	structuretype = new StructureType(proto);
+	types.add(structuretype);	
+	
 	proto = new StructureType.Prototype();
 	for (int x = 0; x < 3; x++) {
 	    for (int z = 0; z < 3; z++) {
@@ -168,7 +233,63 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	proto.addBlock(2, 4, 2, Material.DIAMOND_BLOCK);
 	proto.setName("Global Stone");
 	proto.setRotator(Rotator.NONE);
+	proto.addMetadata("type", "MEMORYSTONE");
 	proto.addMetadata("global", "true");
+	proto.addMetadata("permissionRequired", "memorystone.create.global");
+	proto.addMetadata("distanceLimit", "1024");
+	structuretype = new StructureType(proto);
+	types.add(structuretype);
+	
+	
+	proto = new StructureType.Prototype();
+	for (int x = 0; x < 3; x++) {
+	    for (int z = 0; z < 3; z++) {
+		proto.addBlock(x + 1, 0, z + 1, Material.GOLD_BLOCK);
+	    }
+	}
+
+	for (int x = 0; x < 5; x++) {
+	    if (x == 2) {
+		continue;
+	    }
+	    proto.addBlock(x, 0, 0, Material.STEP);
+	    proto.addBlock(x, 0, 4, Material.STEP);
+	}
+	for (int z = 1; z < 4; z++) {
+	    if (z == 2) {
+		continue;
+	    }
+	    proto.addBlock(0, 0, z, Material.STEP);
+	    proto.addBlock(4, 0, z, Material.STEP);
+	}
+
+	proto.addBlock(2, 1, 2, Material.DIAMOND_BLOCK);
+	proto.addBlock(2, 2, 2, Material.DIAMOND_BLOCK);
+	proto.addBlock(2, 3, 2, Material.DIAMOND_BLOCK);
+	proto.addBlock(2, 4, 2, Material.DIAMOND_BLOCK);
+	proto.setName("Global Crossworld Stone");
+	proto.setRotator(Rotator.NONE);
+	proto.addMetadata("type", "MEMORYSTONE");
+	proto.addMetadata("crossworld", "true");
+	proto.addMetadata("global", "true");
+	proto.addMetadata("permissionRequired", "memorystone.create.crossworldglobal");
+	proto.addMetadata("distanceLimit", "1024");
+	structuretype = new StructureType(proto);
+	types.add(structuretype);	
+	
+	proto = new StructureType.Prototype();
+	proto.addBlock(0, 0, 0, Material.GOLD_BLOCK);
+	proto.addBlock(0, 0, 2, Material.GOLD_BLOCK);
+	proto.addBlock(2, 0, 0, Material.GOLD_BLOCK);
+	proto.addBlock(2, 0, 2, Material.GOLD_BLOCK);
+	proto.addBlock(1, 0, 1, Material.DIAMOND_BLOCK);
+	proto.addBlock(1, 1, 1, Material.DIAMOND_BLOCK);
+	proto.setName("NoTeleport Stone");
+	proto.setRotator(Rotator.NONE);
+	proto.addMetadata("type", "NOTELEPORT");
+	proto.addMetadata("global", "false");
+	proto.addMetadata("permissionRequired", "memorystone.create.noteleport");
+	proto.addMetadata("distanceLimit", "128");
 	structuretype = new StructureType(proto);
 	types.add(structuretype);
     }
@@ -219,12 +340,18 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 		    state.update(true);
 		    return;
 		}
+		
+		if (!state.getLine(1).equals(stone.getName())) {
+		    return;
+		}
 
 		memoryStonePlugin.getCompassManager().forgetStone(stone.getName(), true);
 		namedMap.remove(stone.getName());
 		globalStones.remove(stone.getName());
+		removeWorldStone(stone);
 		stone.setSign(null);
 		memoryStonePlugin.getStructureManager().saveStructures();
+		
 	    }
 	}
     }
@@ -237,7 +364,8 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 
 	final Sign state = (Sign) event.getBlock().getState();
 	final MemoryStone stone = getMemoryStructureBehind(state);
-	if (stone != null) {
+	
+	if (stone != null && stone.getType().equals(StoneType.MEMORYSTONE)) {
 	    // check permissions!
 	    if (!event.getPlayer().hasPermission("memorystone.build")) {
 		event.getPlayer().sendMessage(Config.getColorLang("nobuildpermission"));
@@ -268,8 +396,9 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	    stone.setSign(state);
 	    stone.setName(name);
 	    namedMap.put(name, stone);
+	    addWorldStone(stone);
 	    if ("true".equals(stone.getStructure().getStructureType().getMetadata().get("global"))) {
-		globalStones.add(name);
+		globalStones.add(stone);
 	    }
 	    memoryStonePlugin.getServer().getScheduler().scheduleSyncDelayedTask(memoryStonePlugin, new Runnable() {
 		public void run() {
@@ -306,7 +435,15 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 
     }
     
-    public List<String> getGlobalStones() {
+    public List<MemoryStone> getGlobalStones() {
 	return globalStones;
+    }
+
+    public Collection<? extends MemoryStone> getLocalStones(String world) {
+	return worldStones.get(world);
+    }
+
+    public List<MemoryStone> getNoTeleportStones() {
+	return noTeleportStones;
     }
 }

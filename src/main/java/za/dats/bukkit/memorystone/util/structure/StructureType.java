@@ -85,6 +85,7 @@ public class StructureType {
     private final Map<String, String> metadata;
     private final Rotator rotator;
     private final String name;
+    private final String permissionRequired;
 
     public StructureType(Prototype proto) {
 	this.pattern = new HashMap<BlockOffset, Material>(proto.protopattern);
@@ -93,6 +94,7 @@ public class StructureType {
 	this.name = proto.name;
 	this.metadata = proto.metadata;
 	this.rotator = proto.rotator;
+	this.permissionRequired = proto.metadata.get("permissionRequired");
     }
 
     public int getBlockCount() {
@@ -165,6 +167,8 @@ public class StructureType {
         return rotator;
     }
 
-    
+    public String getPermissionRequired() {
+	return permissionRequired;
+    }
     
 }

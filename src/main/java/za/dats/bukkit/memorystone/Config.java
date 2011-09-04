@@ -35,9 +35,10 @@ public class Config {
 	defaults.put("cooldownTime", 10);
 	defaults.put("fizzleCooldownTime", 5);
 	defaults.put("castingTime", 3);
+	defaults.put("sortByDistance", true);
 	
-	defaults.put("lang.createConfirm", "&EBuilt Memory Stone!");
-	defaults.put("lang.destroyed", "&EDestroyed Memory Stone!");
+	defaults.put("lang.createConfirm", "&EBuilt <name>!");
+	defaults.put("lang.destroyed", "&EDestroyed Memory Stone Structure!");
 	defaults.put("lang.signAdded", "&EMemory Stone created.");
 	defaults.put("lang.destroyForgotten", "Memory stone: <name> has been destroyed and forgotten.");
 	defaults.put("lang.memorize", "Memorized: <name>");
@@ -50,9 +51,11 @@ public class Config {
 	defaults.put("lang.teleportingother", "Teleporting <name> to <destination>");
 	defaults.put("lang.teleportedbyother", "<name> is teleporting you to <destination>");
 	defaults.put("lang.teleporting", "Teleporting to <destination>");
+	defaults.put("lang.noteleportzone", "You are in a no teleport zone. Cannot teleport out.");
 	
 	defaults.put("lang.nobuildpermission", "&EYou do not have permission to build memory stones.");
 	defaults.put("lang.nobreakpermission", "&EYou do not have permission to break memory stones.");
+	defaults.put("lang.selectlocation", "Select a location to teleport to");
 	
 	defaults.put("lang.select", "Selecting destination as <name>");
 	defaults.put("lang.notexist", "<name> no longer exists as a destination");
@@ -121,5 +124,9 @@ public class Config {
 
     public static int getCastingTime() {
 	return conf.getInt("castingTime", 3);
+    }
+    
+    public static boolean isSortByDistance() {
+	return conf.getBoolean("sortByDistance", true);
     }
 }

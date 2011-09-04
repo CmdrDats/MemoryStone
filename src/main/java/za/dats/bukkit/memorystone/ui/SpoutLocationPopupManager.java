@@ -25,6 +25,7 @@ import org.getspout.spoutapi.gui.WidgetAnchor;
 import org.getspout.spoutapi.keyboard.KeyboardManager;
 import org.getspout.spoutapi.player.SpoutPlayer;
 
+import za.dats.bukkit.memorystone.MemoryStone;
 import za.dats.bukkit.memorystone.MemoryStonePlugin;
 
 public class SpoutLocationPopupManager extends ScreenListener {
@@ -33,13 +34,13 @@ public class SpoutLocationPopupManager extends ScreenListener {
     private static final int PAGE_SIZE = PAGE_COLUMNS * PAGE_ROWS;
 
     public interface LocationPopupListener {
-	public void selected(String entry);
+	public void selected(MemoryStone entry);
     }
 
     private class LocationPopup {
 	int page = 0;
-	List<String> locations;
-	Map<UUID, String> locationButtons = new HashMap<UUID, String>();
+	List<MemoryStone> locations;
+	Map<UUID, MemoryStone> locationButtons = new HashMap<UUID, MemoryStone>();
 	GenericPopup popup;
 	UUID cancelId;
 	UUID nextId;
@@ -65,7 +66,7 @@ public class SpoutLocationPopupManager extends ScreenListener {
 	    label.setX(center).setY(heightScale * 7);
 	    popup.attachWidget(plugin, label);
 
-	    String pageText = "" + (page + 1) + " / " + ((locations.size() / (PAGE_SIZE)+1));
+	    String pageText = "" + (page + 1) + " / " + (((locations.size()-1) / PAGE_SIZE)+1);
 	    GenericLabel pageLabel = new GenericLabel(pageText);
 	    pageLabel.setAlign(WidgetAnchor.CENTER_CENTER);
 	    pageLabel.setX(center).setY(heightScale * 12);
@@ -80,14 +81,14 @@ public class SpoutLocationPopupManager extends ScreenListener {
 		int row = i % PAGE_ROWS;
 		int col = i / PAGE_ROWS;
 
-		String text = locations.get(currentEntry);
-		GenericButton locationButton = new GenericButton(text);
+		MemoryStone stone = locations.get(currentEntry);
+		GenericButton locationButton = new GenericButton(stone.getName());
 		locationButton.setX(center - (widthScale * 35) + (widthScale * col * 40)).setY(
 			heightScale * (row + 2) * 13);
 		locationButton.setWidth(widthScale * 30).setHeight(heightScale * 10);
 		popup.attachWidget(plugin, locationButton);
 
-		locationButtons.put(locationButton.getId(), text);
+		locationButtons.put(locationButton.getId(), stone);
 	    }
 
 	    if (page > 0) {
@@ -115,14 +116,16 @@ public class SpoutLocationPopupManager extends ScreenListener {
 	    popup.setDirty(true);
 	}
 
-	void createPopup(SpoutPlayer sPlayer, Set<String> locationSet, String text, LocationPopupListener listener) {
+	void createPopup(SpoutPlayer sPlayer, Set<MemoryStone> locationSet, String text, LocationPopupListener listener) {
 	    popup = new GenericPopup();
 	    this.listener = listener;
-	    this.locations = new ArrayList<String>(locationSet);
+	    this.locations = new ArrayList<MemoryStone>(locationSet);
 	
 	    player = sPlayer;
 	    heading = text;
 	    updatePage();
+	    
+	    player.getMainScreen().closePopup();
 	    player.getMainScreen().attachPopupScreen(popup);
 	    
 	}
@@ -131,7 +134,8 @@ public class SpoutLocationPopupManager extends ScreenListener {
 
     private final JavaPlugin plugin;
     private HashMap<UUID, LocationPopup> popups = new HashMap<UUID, SpoutLocationPopupManager.LocationPopup>();
-
+    private HashMap<String, LocationPopup> playerPopups = new HashMap<String, SpoutLocationPopupManager.LocationPopup>();
+    
     public SpoutLocationPopupManager(JavaPlugin plugin) {
 	this.plugin = plugin;
     }
@@ -140,15 +144,22 @@ public class SpoutLocationPopupManager extends ScreenListener {
 	plugin.getServer().getPluginManager().registerEvent(Type.CUSTOM_EVENT, this, Priority.Normal, plugin);
     }
 
-    public void showPopup(SpoutPlayer sPlayer, Set<String> locations, String text, LocationPopupListener listener) {
+    public void showPopup(SpoutPlayer sPlayer, Set<MemoryStone> locations, String text, LocationPopupListener listener) {
+	closePopup(popups.get(playerPopups));
 	LocationPopup newPopup = new LocationPopup();
 	newPopup.createPopup(sPlayer, locations, text, listener);
 	popups.put(newPopup.popup.getId(), newPopup);
+	playerPopups.put(sPlayer.getName(), newPopup);
     }
 
     private void closePopup(LocationPopup popup) {
+	if (popup == null || popup.popup == null) {
+	    return;
+	}
+	
 	popup.popup.close();
 	popups.remove(popup);
+	playerPopups.remove(popup);
     }
     
     

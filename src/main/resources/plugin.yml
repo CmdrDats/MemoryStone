@@ -1,6 +1,6 @@
 name: MemoryStone
 main: za.dats.bukkit.memorystone.MemoryStonePlugin
-version: 1.0.4
+version: 1.0.5
 website: http://www.dats.co.za
 author: CmdrDats
 description: >
@@ -43,4 +43,31 @@ permissions:
   memorystone.useinstantly:
     description: allows user to teleport without casting time
     default: false
-             
+  memorystone.allmemorized:
+    description: allows user to teleport to any stone without first memorizing it.
+    default: false
+    
+  memorystone.create.*:
+    description: Gives access to all the stone types
+    children:
+      memorystone.create.local: true
+      memorystone.create.global: true
+      memorystone.create.crossworld: true
+      memorystone.create.crossworldglobal: true
+      memorystone.create.noteleport: true
+  memorystone.create.local:
+    description: Create local memory stones
+    default: true
+  memorystone.create.global:
+    description: Create global memory stones
+    default: true
+  memorystone.create.crossworld:
+    description: Create crossworld memory stones
+    default: true
+  memorystone.create.crossworldglobal:
+    description: Create crossworld global memory stones
+    default: true
+  memorystone.create.noteleport:
+    description: Create noteleport zone stones.
+    default: true
+

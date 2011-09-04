@@ -7,8 +7,21 @@ ChangeLog:
 ----------
 
 1.0.4
-	- Fixed up the direction the player faces and exact position after teleporting (thanks 
+	- Fixed up the direction the player faces and exact position after teleporting (thanks to ne0nx3r0 and Specops343 of BlueTelepad, their code helped with this!)
 	- Cleaned up logging
+	- Rework the code to handle multiple worlds easier
+	- Fixed a bug with showing the location popup if it gets overridden by another in-game popup.
+	- Added memorystone.allmemorized permission, for user to have access to all memory stones in the world.
+	- Fixed an issue with breaking and rebuilding memory stones
+	- Added crossworld and global crossworld stones
+	- Added permissions for building each respective type of memory stone
+	- Off by one issue on when exactly filling one page with locations
+	- Added structure specific distanceLimits (put them to zero if you want it to be infinite)
+	- Sorts memory stones by distance now.
+	- Added config option to sort by distance (if false will sort by alphabetical as before)
+	- Added noteleport zone structure
+	- Externalized the select location title
+	- Protect memory stones from being blown up by creepers and TNT
 	
 1.0.3
 	- Flip left and right click so that teleport is consistient.
@@ -49,3 +62,7 @@ The Spout team
 tprk77 for HealingTotem - I used his awesome structure code - this should really be in the Core Bukkit code.
 krinsdeath for ChestSync - I used some of his coding ideas and signage code.
 ne0nx3r0 and Specops343 of BlueTelepad - Their code helped me get the yaw and pitch correct.
+
+Also, credit goes to the following people for their fantastic input:
+
+Tylui, PhantomX, Kaiemi

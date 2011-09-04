@@ -8,8 +8,11 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityListener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -37,6 +40,12 @@ public class StructureBlockListener extends BlockListener {
 	PluginManager pm = this.plugin.getServer().getPluginManager();
 	pm.registerEvent(Event.Type.BLOCK_PLACE, this, Event.Priority.Normal, this.plugin);
 	pm.registerEvent(Event.Type.BLOCK_BREAK, this, Event.Priority.High, this.plugin);
+	pm.registerEvent(Event.Type.ENTITY_EXPLODE, new EntityListener() {
+	    @Override
+	    public void onEntityExplode(EntityExplodeEvent event) {
+		StructureBlockListener.this.onEntityExplode(event);
+	    }
+	}, Event.Priority.High, plugin);
     }
 
     @Override
@@ -63,6 +72,14 @@ public class StructureBlockListener extends BlockListener {
 		event.setCancelled(true);
 		player.sendMessage(Config.getColorLang("nobuildpermission"));
 		return;
+	    }
+
+	    if (totemtype.getPermissionRequired() != null && totemtype.getPermissionRequired().length() > 0) {
+		if (!player.hasPermission(totemtype.getPermissionRequired())) {
+		    event.setCancelled(true);
+		    player.sendMessage(Config.getColorLang("nobuildpermission"));
+		    return;
+		}
 	    }
 
 	    // check the number of totems
@@ -126,4 +143,19 @@ public class StructureBlockListener extends BlockListener {
 	// if (!this.plugin.getConfigManager().isQuiet()) {
 	// }
     }
+
+    protected void onEntityExplode(EntityExplodeEvent event) {
+	if (event.isCancelled()) {
+	    return;
+	}
+	
+	for (Block brokenBlock : event.blockList()) {
+	    Set<Structure> totems = structureManager.getStructuresFromBlock(brokenBlock);
+	    if (totems != null) {
+		event.setCancelled(true);
+		return;
+	    }
+	}
+    }
+
 }
