@@ -14,6 +14,7 @@ import org.getspout.spoutapi.inventory.CraftingInventory;
 
 import sun.security.action.GetLongAction;
 
+import za.dats.bukkit.memorystone.economy.EconomyManager;
 import za.dats.bukkit.memorystone.ui.SpoutLocationPopupManager;
 import za.dats.bukkit.memorystone.util.StructureManager;
 
@@ -24,7 +25,9 @@ public class MemoryStonePlugin extends JavaPlugin {
     private MemoryStoneManager memoryStoneManager = new MemoryStoneManager(this);
     private CompassManager compassManager = new CompassManager(this);
     private SpoutLocationPopupManager spoutLocationPopupManager = new SpoutLocationPopupManager(this);
-    
+    private EconomyManager economyManager = new EconomyManager();
+    private static MemoryStonePlugin instance;
+
     public void onDisable() {
     }
 
@@ -38,6 +41,7 @@ public class MemoryStonePlugin extends JavaPlugin {
     
     
     public void onEnable() {
+	instance = this;
 	Utility.init(this);
 	Config.init(this);
 	pm = getServer().getPluginManager();
@@ -45,12 +49,16 @@ public class MemoryStonePlugin extends JavaPlugin {
 
 	info(pdf.getName() + " version " + pdf.getVersion() + " is enabled!");
 	
+	economyManager.loadEconomy();
+	
 	structureManager.addStructureListener(memoryStoneManager);
 	structureManager.registerEvents();
 	
 	memoryStoneManager.registerEvents();
 	compassManager.registerEvents();
 	spoutLocationPopupManager.registerEvents();
+	
+	
     }
 
     public boolean hasSpout() {
@@ -75,6 +83,12 @@ public class MemoryStonePlugin extends JavaPlugin {
     public SpoutLocationPopupManager getSpoutLocationPopupManager() {
         return spoutLocationPopupManager;
     }
-  
     
+    public static MemoryStonePlugin getInstance() {
+	return instance;
+    }
+    
+    public EconomyManager getEconomyManager() {
+	return economyManager;
+    }
 }

@@ -40,6 +40,7 @@ import org.getspout.spoutapi.player.SpoutPlayer;
 
 import sun.security.action.GetLongAction;
 
+import za.dats.bukkit.memorystone.economy.EconomyManager;
 import za.dats.bukkit.memorystone.ui.SpoutLocationPopupManager;
 import za.dats.bukkit.memorystone.ui.SpoutLocationPopupManager.LocationPopupListener;
 
@@ -85,6 +86,10 @@ public class CompassManager extends PlayerListener {
 	if (Config.isSortByDistance()) {
 	    result = new TreeSet<MemoryStone>(new Comparator<MemoryStone>() {
 		public int compare(MemoryStone o1, MemoryStone o2) {
+		    if (o1.equals(o2)) {
+			return 0;
+		    }
+		    
 		    if (o1.getStructure().getWorld().getName().equals(o2.getStructure().getWorld().getName())) {
 			double o1Distance = player.getLocation().distanceSquared(o1.getSign().getBlock().getLocation());
 			double o2Distance = player.getLocation().distanceSquared(o2.getSign().getBlock().getLocation());
@@ -142,6 +147,13 @@ public class CompassManager extends PlayerListener {
 	if (memoryStone.getDistanceLimit() <= 0) {
 	    result.add(memoryStone);
 	} else {
+	    if (memoryStone.getSign() == null) {
+		return;
+	    }
+
+	    if (memoryStone.getSign().getBlock() == null) {
+		return;
+	    }
 	    double distance = player.getLocation().distanceSquared(memoryStone.getSign().getBlock().getLocation());
 	    if (distance < memoryStone.getDistanceLimit()) {
 		result.add(memoryStone);
@@ -185,13 +197,32 @@ public class CompassManager extends PlayerListener {
 	MemoryStone stone = plugin.getMemoryStoneManager().getMemoryStructureBehind(state);
 
 	if (stone != null && stone.getSign() != null) {
-	    selected.put(event.getPlayer().getName(), stone.getName());
+	    if (stone.isGlobal()) {
+		event.getPlayer().sendMessage(Config.getColorLang("alreadymemorized", "name", stone.getName()));
+		return true;
+	    }
+	    
+	    EconomyManager economyManager = MemoryStonePlugin.getInstance().getEconomyManager();
+	    if (economyManager.isEconomyEnabled() && (!event.getPlayer().hasPermission("memorystone.usefree"))
+		    && !economyManager.payMemorizeCost(event.getPlayer(), stone)) {
+		event.getPlayer().sendMessage(
+			Config.getColorLang("cantaffordmemorize", "name", stone.getName(), "cost",
+				economyManager.getFormattedCost(stone.getMemorizeCost())));
+		return true;
+	    }
+
 	    Set<MemoryStone> set = memorized.get(event.getPlayer().getName());
 	    if (set == null) {
 		set = new TreeSet<MemoryStone>();
 		memorized.put(event.getPlayer().getName(), set);
 	    }
+
+	    if (set.contains(stone)) {
+		event.getPlayer().sendMessage(Config.getColorLang("alreadymemorized", "name", stone.getName()));
+		return true;
+	    }
 	    set.add(stone);
+	    selected.put(event.getPlayer().getName(), stone.getName());
 
 	    event.getPlayer().sendMessage(Config.getColorLang("memorize", "name", stone.getName()));
 
@@ -323,6 +354,16 @@ public class CompassManager extends PlayerListener {
 	    if (now - teleport.lastFizzleTime < Config.getFizzleCooldownTime() * 1000) {
 		long left = Config.getFizzleCooldownTime() - ((now - teleport.lastFizzleTime) / 1000);
 		event.getPlayer().sendMessage(Config.getColorLang("cooldown", "left", "" + left));
+		return;
+	    }
+	}
+
+	if (!event.getPlayer().hasPermission("memorystone.usefree")) {
+	    EconomyManager economyManager = MemoryStonePlugin.getInstance().getEconomyManager();
+	    if (economyManager.isEconomyEnabled() && !economyManager.payTeleportCost(player, stone)) {
+		event.getPlayer().sendMessage(
+			Config.getColorLang("cantaffordteleport", "name", name, "cost",
+				economyManager.getFormattedCost(stone.getTeleportCost())));
 		return;
 	    }
 	}
@@ -505,7 +546,7 @@ public class CompassManager extends PlayerListener {
 	    return;
 	}
 	teleport.lastEventTime = now;
-	
+
 	if (event.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
 	    if (event.getClickedBlock().getState() instanceof Sign) {
 		if (teleport.started) {
@@ -523,6 +564,10 @@ public class CompassManager extends PlayerListener {
 	}
 
 	if (event.getAction().equals(Action.LEFT_CLICK_BLOCK) || event.getAction().equals(Action.LEFT_CLICK_AIR)) {
+	    SpoutPlayer p = (SpoutPlayer) event.getPlayer();
+	    if (p.isSpoutCraftEnabled()) {
+		return;
+	    }
 	    // Make interaction with interactable blocks cleaner
 	    if (event.getClickedBlock() != null && skippedInteractionBlocks.contains(event.getClickedBlock().getType())) {
 		return;
@@ -561,14 +606,22 @@ public class CompassManager extends PlayerListener {
 		}
 	    }
 
-	    SpoutPlayer p = (SpoutPlayer) event.getPlayer();
-	    if (!p.isSpoutCraftEnabled()) {
-		event.getPlayer().sendMessage(Config.getColorLang("select", "name", selectedName));
-		selected.put(event.getPlayer().getName(), selectedName);
-		event.setCancelled(true);
-	    }
+	    if (!event.getPlayer().hasPermission("memorystone.usefree")) {
+		EconomyManager economyManager = MemoryStonePlugin.getInstance().getEconomyManager();
+		if (economyManager.isEconomyEnabled()) {
+		    MemoryStone stone = MemoryStonePlugin.getInstance().getMemoryStoneManager()
+			    .getNamedMemoryStone(selectedName);
 
-	    return;
+		    event.getPlayer().sendMessage(
+			    Config.getColorLang("selectwithcost", "name", selectedName, "cost",
+				    economyManager.getFormattedCost(stone.getTeleportCost())));
+		}
+	    }
+	    event.getPlayer().sendMessage(Config.getColorLang("select", "name", selectedName));
+
+	    selected.put(event.getPlayer().getName(), selectedName);
+	    event.setCancelled(true);
+
 	}
 
 	if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK) || event.getAction().equals(Action.RIGHT_CLICK_AIR)) {

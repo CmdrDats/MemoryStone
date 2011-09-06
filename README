@@ -6,6 +6,12 @@ This plugin for minecraft Bukkit lets you create Memory Stone structures. You ca
 ChangeLog:
 ----------
 
+1.0.5
+	- Fixed up NPE on loading structuretypes without distance
+	- Added iConomy Support
+	- Added BOSEconomy Support
+	- Make so that you cannot memorize global memory stones... (no need!)
+
 1.0.4
 	- Fixed up the direction the player faces and exact position after teleporting (thanks to ne0nx3r0 and Specops343 of BlueTelepad, their code helped with this!)
 	- Cleaned up logging

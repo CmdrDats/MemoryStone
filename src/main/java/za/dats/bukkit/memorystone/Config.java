@@ -37,11 +37,16 @@ public class Config {
 	defaults.put("castingTime", 3);
 	defaults.put("sortByDistance", true);
 	
+	defaults.put("economy.enabled", true);
+	defaults.put("economy.ownerGetsPaid", true);
+	defaults.put("economy.addCustomValue", true);
+	
 	defaults.put("lang.createConfirm", "&EBuilt <name>!");
 	defaults.put("lang.destroyed", "&EDestroyed Memory Stone Structure!");
 	defaults.put("lang.signAdded", "&EMemory Stone created.");
 	defaults.put("lang.destroyForgotten", "Memory stone: <name> has been destroyed and forgotten.");
 	defaults.put("lang.memorize", "Memorized: <name>");
+	defaults.put("lang.alreadymemorized", "You have already memorized: <name>");
 	defaults.put("lang.notfound", "<name> could not be found");
 	defaults.put("lang.cooldown", "Teleport cooling down (<left>s)");
 	defaults.put("lang.startrecall", "Starting recall to <name>");
@@ -58,12 +63,16 @@ public class Config {
 	defaults.put("lang.selectlocation", "Select a location to teleport to");
 	
 	defaults.put("lang.select", "Selecting destination as <name>");
+	defaults.put("lang.selectwithcost", "Selecting destination as <name> with a cost of <cost>");
 	defaults.put("lang.notexist", "<name> no longer exists as a destination");
 	defaults.put("lang.notmemorized", "No Memorized recalling");
 	defaults.put("lang.signboard", "&AMemory Stone");
 	defaults.put("lang.broken", "&C[Broken]");
 	defaults.put("lang.duplicate", "&C[Duplicate]");
 	
+	defaults.put("lang.cantaffordbuild", "Cannot afford to build this structure at cost of : <cost>");
+	defaults.put("lang.cantaffordmemorize", "Cannot afford to memorize <name> at cost of : <cost>");
+	defaults.put("lang.cantaffordteleport", "Cannot afford to teleport to <name> with cost of : <cost>");
 	boolean changed = false;
 	for (String key : defaults.keySet()) {
 	    if (conf.getProperty(key) == null) {
@@ -128,5 +137,17 @@ public class Config {
     
     public static boolean isSortByDistance() {
 	return conf.getBoolean("sortByDistance", true);
+    }
+    
+    public static boolean isEconomyEnabled() {
+	return conf.getBoolean("economy.enabled", true);
+    }
+    
+    public static boolean isEconomyOwnerPaid() {
+	return conf.getBoolean("economy.ownerIsPaid", true);
+    }
+    
+    public static boolean isEconomyAddCustomValue() {
+	return conf.getBoolean("economy.addCustomValue", true);
     }
 }

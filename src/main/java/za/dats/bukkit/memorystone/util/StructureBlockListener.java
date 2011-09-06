@@ -17,7 +17,9 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import za.dats.bukkit.memorystone.Config;
+import za.dats.bukkit.memorystone.MemoryStonePlugin;
 import za.dats.bukkit.memorystone.Utility;
+import za.dats.bukkit.memorystone.economy.EconomyManager;
 import za.dats.bukkit.memorystone.util.structure.Structure;
 import za.dats.bukkit.memorystone.util.structure.StructureType;
 
@@ -56,12 +58,12 @@ public class StructureBlockListener extends BlockListener {
 	String owner = event.getPlayer().getName();
 
 	Block placedblock = event.getBlockPlaced();
-	List<StructureType> totemtypes = structureManager.getStructureTypes();
+	List<StructureType> structureTypes = structureManager.getStructureTypes();
 
-	TOTEMBUILD: for (StructureType totemtype : totemtypes) {
+	TOTEMBUILD: for (StructureType structureType : structureTypes) {
 
-	    Structure totem = new Structure(totemtype, placedblock, owner);
-	    if (!totem.verifyStructure()) {
+	    Structure structure = new Structure(structureType, placedblock, owner);
+	    if (!structure.verifyStructure()) {
 		continue;
 	    }
 
@@ -74,13 +76,15 @@ public class StructureBlockListener extends BlockListener {
 		return;
 	    }
 
-	    if (totemtype.getPermissionRequired() != null && totemtype.getPermissionRequired().length() > 0) {
-		if (!player.hasPermission(totemtype.getPermissionRequired())) {
+	    if (structureType.getPermissionRequired() != null && structureType.getPermissionRequired().length() > 0) {
+		if (!player.hasPermission(structureType.getPermissionRequired())) {
 		    event.setCancelled(true);
 		    player.sendMessage(Config.getColorLang("nobuildpermission"));
 		    return;
 		}
 	    }
+	    
+	    
 
 	    // check the number of totems
 	    /*
@@ -91,9 +95,18 @@ public class StructureBlockListener extends BlockListener {
 	     * return; }
 	     */
 
-	    for (Block block : totem.getBlocks()) {
+	    for (Block block : structure.getBlocks()) {
 		if (structureManager.getStructuresFromBlock(block) != null) {
 		    break TOTEMBUILD;
+		}
+	    }
+	    
+	    EconomyManager economyManager = MemoryStonePlugin.getInstance().getEconomyManager();
+	    if (economyManager.isEconomyEnabled() && !player.hasPermission("memorystone.usefree")) {
+		if (!economyManager.payBuildCost(player, structureType)) {
+		    event.setCancelled(true);
+		    player.sendMessage(Config.getColorLang("cantaffordbuild", "cost", economyManager.getBuildCostString(structureType)));
+		    return;
 		}
 	    }
 
@@ -102,8 +115,8 @@ public class StructureBlockListener extends BlockListener {
 		placedblock.getWorld().strikeLightningEffect(placedblock.getLocation());
 	    }
 
-	    totem.setOwner(event.getPlayer().getName());
-	    structureManager.addStructure(event, totem);
+	    structure.setOwner(event.getPlayer().getName());
+	    structureManager.addStructure(event, structure);
 	    structureManager.saveStructures();
 
 	}

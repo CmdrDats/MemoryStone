@@ -1,13 +1,13 @@
 name: MemoryStone
 main: za.dats.bukkit.memorystone.MemoryStonePlugin
-version: 1.0.5
+version: 1.0.6
 website: http://www.dats.co.za
 author: CmdrDats
 description: >
              Build Memory Stones out of Stone and Obsidian and a Sign to name it
              Tap a Memory Stone with your compass to memorize its location
              Right click with a compass to select a memorized stone to teleport to
-softdepend: [Spout]             
+softdepend: [Spout, iConomy, BOSEconomy] 
 permissions:
   memorystone.*:
     description: gives access to all normal MemoryStone permissions

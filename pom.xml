@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>za.dats.bukkit</groupId>
 	<artifactId>memory-stone</artifactId>
-	<version>1.0.3</version>
+	<version>1.0.6</version>
 	<name>MemoryStone</name>
 	<url>http://www.dats.co.za/memoryStone</url>
 	<build>
@@ -32,6 +32,20 @@
 			<groupId>org.getspout</groupId>
 			<artifactId>spoutapi</artifactId>
 			<version>dev-SNAPSHOT</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.iconomy</groupId>
+			<artifactId>iConomy</artifactId>
+			<version>5.0.1</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.boseconomy</groupId>
+			<artifactId>BOSEconomy</artifactId>
+			<version>0.7.2</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>

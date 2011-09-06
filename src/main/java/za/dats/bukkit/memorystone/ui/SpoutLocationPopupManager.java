@@ -27,6 +27,7 @@ import org.getspout.spoutapi.player.SpoutPlayer;
 
 import za.dats.bukkit.memorystone.MemoryStone;
 import za.dats.bukkit.memorystone.MemoryStonePlugin;
+import za.dats.bukkit.memorystone.economy.EconomyManager;
 
 public class SpoutLocationPopupManager extends ScreenListener {
     private static final int PAGE_COLUMNS = 2;
@@ -48,13 +49,13 @@ public class SpoutLocationPopupManager extends ScreenListener {
 	SpoutPlayer player;
 	String heading;
 	LocationPopupListener listener;
-	
+
 	void updatePage() {
 	    for (Widget widget : popup.getAttachedWidgets()) {
 		popup.removeWidget(widget);
 	    }
 	    locationButtons.clear();
-	    
+
 	    int center = player.getMainScreen().getWidth() / 2;
 	    int widthScale = player.getMainScreen().getWidth() / 100;
 	    int heightScale = player.getMainScreen().getHeight() / 100;
@@ -66,11 +67,14 @@ public class SpoutLocationPopupManager extends ScreenListener {
 	    label.setX(center).setY(heightScale * 7);
 	    popup.attachWidget(plugin, label);
 
-	    String pageText = "" + (page + 1) + " / " + (((locations.size()-1) / PAGE_SIZE)+1);
+	    String pageText = "" + (page + 1) + " / " + (((locations.size() - 1) / PAGE_SIZE) + 1);
 	    GenericLabel pageLabel = new GenericLabel(pageText);
 	    pageLabel.setAlign(WidgetAnchor.CENTER_CENTER);
 	    pageLabel.setX(center).setY(heightScale * 12);
 	    popup.attachWidget(plugin, pageLabel);
+
+	    EconomyManager economyManager = MemoryStonePlugin.getInstance().getEconomyManager();
+	    boolean economyEnabled = economyManager.isEconomyEnabled() && !player.hasPermission("memorystone.usefree");
 
 	    for (int i = 0; i < PAGE_SIZE; i++) {
 		int currentEntry = i + (page * PAGE_SIZE);
@@ -82,10 +86,17 @@ public class SpoutLocationPopupManager extends ScreenListener {
 		int col = i / PAGE_ROWS;
 
 		MemoryStone stone = locations.get(currentEntry);
-		GenericButton locationButton = new GenericButton(stone.getName());
-		locationButton.setX(center - (widthScale * 35) + (widthScale * col * 40)).setY(
-			heightScale * (row + 2) * 13);
-		locationButton.setWidth(widthScale * 30).setHeight(heightScale * 10);
+		String name = stone.getName();
+		int buttonWidth = 30;
+		if (economyEnabled) {
+		    buttonWidth = 45;
+		    name = stone.getName() + " ("+economyManager.getFormattedCost(stone.getTeleportCost())+")";
+		}
+		GenericButton locationButton = new GenericButton(name);
+		locationButton
+			.setX(center - (widthScale * (buttonWidth + 5)) + (widthScale * col * (buttonWidth + 10)))
+			.setY(heightScale * (row + 2) * 13);
+		locationButton.setWidth(widthScale * buttonWidth).setHeight(heightScale * 10);
 		popup.attachWidget(plugin, locationButton);
 
 		locationButtons.put(locationButton.getId(), stone);
@@ -112,7 +123,7 @@ public class SpoutLocationPopupManager extends ScreenListener {
 		popup.attachWidget(plugin, nextButton);
 		nextId = nextButton.getId();
 	    }
-	    
+
 	    popup.setDirty(true);
 	}
 
@@ -120,14 +131,14 @@ public class SpoutLocationPopupManager extends ScreenListener {
 	    popup = new GenericPopup();
 	    this.listener = listener;
 	    this.locations = new ArrayList<MemoryStone>(locationSet);
-	
+
 	    player = sPlayer;
 	    heading = text;
 	    updatePage();
-	    
+
 	    player.getMainScreen().closePopup();
 	    player.getMainScreen().attachPopupScreen(popup);
-	    
+
 	}
 
     }
@@ -135,7 +146,7 @@ public class SpoutLocationPopupManager extends ScreenListener {
     private final JavaPlugin plugin;
     private HashMap<UUID, LocationPopup> popups = new HashMap<UUID, SpoutLocationPopupManager.LocationPopup>();
     private HashMap<String, LocationPopup> playerPopups = new HashMap<String, SpoutLocationPopupManager.LocationPopup>();
-    
+
     public SpoutLocationPopupManager(JavaPlugin plugin) {
 	this.plugin = plugin;
     }
@@ -156,13 +167,11 @@ public class SpoutLocationPopupManager extends ScreenListener {
 	if (popup == null || popup.popup == null) {
 	    return;
 	}
-	
+
 	popup.popup.close();
 	popups.remove(popup);
 	playerPopups.remove(popup);
     }
-    
-    
 
     @Override
     public void onButtonClick(ButtonClickEvent event) {
