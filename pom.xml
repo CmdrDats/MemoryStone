@@ -20,6 +20,7 @@
 			</plugin>
 		</plugins>
 	</build>
+	<!-- For the most part, I'm administering my own Artifactory where I'm manually deploying these, so they might be incorrect -->
 	<dependencies>
 		<dependency>
 			<groupId>org.bukkit</groupId>
@@ -37,15 +38,42 @@
 		</dependency>
 		<dependency>
 			<groupId>com.iconomy</groupId>
-			<artifactId>iConomy</artifactId>
-			<version>5.0.1</version>
+			<artifactId>iCo6</artifactId>
+			<version>6.0.0</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>		<dependency>
+			<groupId>com.iconomy</groupId>
+			<artifactId>iCo5</artifactId>
+			<version>5.0.0</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
+			<groupId>com.iconomy</groupId>
+			<artifactId>iCo4</artifactId>
+			<version>4.0.0</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>		
+		<dependency>
 			<groupId>com.boseconomy</groupId>
 			<artifactId>BOSEconomy</artifactId>
 			<version>0.7.2</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.essentials</groupId>
+			<artifactId>Essentials</artifactId>
+			<version>2.5.8</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>me.ashtheking</groupId>
+			<artifactId>MultiCurrency</artifactId>
+			<version>1.0.0</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>

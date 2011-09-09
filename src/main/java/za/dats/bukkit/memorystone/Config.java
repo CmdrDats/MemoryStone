@@ -36,10 +36,13 @@ public class Config {
 	defaults.put("fizzleCooldownTime", 5);
 	defaults.put("castingTime", 3);
 	defaults.put("sortByDistance", true);
+	defaults.put("minProximityToStoneForTeleport", 0);
 	
 	defaults.put("economy.enabled", true);
 	defaults.put("economy.ownerGetsPaid", true);
 	defaults.put("economy.addCustomValue", true);
+	
+	defaults.put("teleportKey", "C");
 	
 	defaults.put("lang.createConfirm", "&EBuilt <name>!");
 	defaults.put("lang.destroyed", "&EDestroyed Memory Stone Structure!");
@@ -57,10 +60,12 @@ public class Config {
 	defaults.put("lang.teleportedbyother", "<name> is teleporting you to <destination>");
 	defaults.put("lang.teleporting", "Teleporting to <destination>");
 	defaults.put("lang.noteleportzone", "You are in a no teleport zone. Cannot teleport out.");
+	defaults.put("lang.teleportitemnotfound", "You need to have a compass to teleport");
 	
 	defaults.put("lang.nobuildpermission", "&EYou do not have permission to build memory stones.");
 	defaults.put("lang.nobreakpermission", "&EYou do not have permission to break memory stones.");
 	defaults.put("lang.selectlocation", "Select a location to teleport to");
+	defaults.put("lang.selectotherlocation", "Select a location to teleport <name> to");
 	
 	defaults.put("lang.select", "Selecting destination as <name>");
 	defaults.put("lang.selectwithcost", "Selecting destination as <name> with a cost of <cost>");
@@ -69,6 +74,8 @@ public class Config {
 	defaults.put("lang.signboard", "&AMemory Stone");
 	defaults.put("lang.broken", "&C[Broken]");
 	defaults.put("lang.duplicate", "&C[Duplicate]");
+	
+	defaults.put("lang.outsideproximity", "You are not close enough to a memory stone to teleport.");
 	
 	defaults.put("lang.cantaffordbuild", "Cannot afford to build this structure at cost of : <cost>");
 	defaults.put("lang.cantaffordmemorize", "Cannot afford to memorize <name> at cost of : <cost>");
@@ -90,6 +97,9 @@ public class Config {
     
     public static String getColorLang(String langKey, String ... keyMap) {
 	String result = getLang(langKey);
+	if (result == null) {
+	    result = langKey;
+	}
 	for (int i = 0; i < keyMap.length; i += 2) {
 	    if (i+1 >= keyMap.length) {
 		break;
@@ -149,5 +159,13 @@ public class Config {
     
     public static boolean isEconomyAddCustomValue() {
 	return conf.getBoolean("economy.addCustomValue", true);
+    }
+    
+    public static int getMinProximityToStoneForTeleport() {
+	return conf.getInt("minProximityToStoneForTeleport", 0);
+    }
+    
+    public static String getTeleportKey() {
+	return conf.getString("teleportKey", "C");
     }
 }

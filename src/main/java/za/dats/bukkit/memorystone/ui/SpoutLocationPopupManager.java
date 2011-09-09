@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Type;
 import org.bukkit.plugin.Plugin;
@@ -33,10 +34,6 @@ public class SpoutLocationPopupManager extends ScreenListener {
     private static final int PAGE_COLUMNS = 2;
     private static final int PAGE_ROWS = 5;
     private static final int PAGE_SIZE = PAGE_COLUMNS * PAGE_ROWS;
-
-    public interface LocationPopupListener {
-	public void selected(MemoryStone entry);
-    }
 
     private class LocationPopup {
 	int page = 0;
@@ -155,7 +152,8 @@ public class SpoutLocationPopupManager extends ScreenListener {
 	plugin.getServer().getPluginManager().registerEvent(Type.CUSTOM_EVENT, this, Priority.Normal, plugin);
     }
 
-    public void showPopup(SpoutPlayer sPlayer, Set<MemoryStone> locations, String text, LocationPopupListener listener) {
+    public void showPopup(Player player, Set<MemoryStone> locations, String text, LocationPopupListener listener) {
+	SpoutPlayer sPlayer = (SpoutPlayer) player;
 	closePopup(popups.get(playerPopups));
 	LocationPopup newPopup = new LocationPopup();
 	newPopup.createPopup(sPlayer, locations, text, listener);

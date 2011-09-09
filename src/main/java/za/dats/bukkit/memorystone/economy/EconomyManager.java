@@ -1,45 +1,42 @@
 package za.dats.bukkit.memorystone.economy;
 
 import java.util.Map;
+import java.util.logging.Level;
 
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginDescriptionFile;
 
 import za.dats.bukkit.memorystone.Config;
 import za.dats.bukkit.memorystone.MemoryStone;
 import za.dats.bukkit.memorystone.MemoryStonePlugin;
+import za.dats.bukkit.memorystone.economy.payment.Method.MethodAccount;
+import za.dats.bukkit.memorystone.economy.payment.Methods;
 import za.dats.bukkit.memorystone.util.structure.StructureType;
 
 public class EconomyManager {
-    private Economy economy;
-
     public void loadEconomy() {
-	economy = null;
-
 	loadPlugin();
+    }
 
-	if (economy != null) {
-	    economy.load();
-	}
+    public void unloadEconomy() {
+	Methods.reset();
     }
 
     private void loadPlugin() {
-	Plugin plugin = MemoryStonePlugin.getInstance().getServer().getPluginManager().getPlugin("iConomy");
-	if (plugin != null && plugin.isEnabled()) {
-	    economy = new IConomy(plugin);
-	    return;
-	}
+	Methods.setVersion(MemoryStonePlugin.getInstance().getDescription().getVersion());
 
-	plugin = MemoryStonePlugin.getInstance().getServer().getPluginManager().getPlugin("BOSEconomy");
-	if (plugin != null && plugin.isEnabled()) {
-	    economy = new BOSEconomy(plugin);
-	    return;
-	}
+	Methods.setMethod(MemoryStonePlugin.getInstance().getServer().getPluginManager());
 
+	if (Methods.getMethod() == null) {
+	    MemoryStonePlugin.getInstance().warn("No Register Method Found. Economy Disabled");
+	} else {
+	    MemoryStonePlugin.getInstance().info("Hooked into: "+Methods.getMethod().getName()+" "+Methods.getMethod().getVersion());
+	}
     }
 
     public boolean isEconomyEnabled() {
-	if (Config.isEconomyEnabled() && economy != null) {
+	if (Config.isEconomyEnabled() && Methods.getMethod() != null) {
 	    return true;
 	}
 
@@ -47,11 +44,11 @@ public class EconomyManager {
     }
 
     public String getFormattedCost(double cost) {
-	return economy.format(cost);
+	return Methods.getMethod().format(cost);
     }
 
     public String getBuildCostString(StructureType structureType) {
-	return economy.format(getBuildCost(structureType));
+	return Methods.getMethod().format(getBuildCost(structureType));
     }
 
     private double getBuildCost(StructureType structureType) {
@@ -68,18 +65,29 @@ public class EconomyManager {
     }
 
     public boolean payTeleportCost(Player player, MemoryStone stone) {
+	MethodAccount account = Methods.getMethod().getAccount(player.getName());
+	if (account == null) {
+	    return false;
+	}
+
 	double cost = stone.getTeleportCost();
-	if (economy.payFrom(player, cost)) {
+	if (!account.hasEnough(cost)) {
+	    return false;
+	}
+
+	if (account.subtract(cost)) {
 	    if (Config.isEconomyOwnerPaid()) {
 		String owner = stone.getStructure().getOwner();
 		if (owner == null || stone.getStructure().getOwner().length() == 0) {
 		    return true;
 		}
 
-		economy.payTo(owner, cost);
-
-		return true;
+		MethodAccount ownerAccount = Methods.getMethod().getAccount(owner);
+		if (ownerAccount != null) {
+		    ownerAccount.add(cost);
+		}
 	    }
+
 	    return true;
 	}
 
@@ -87,18 +95,29 @@ public class EconomyManager {
     }
 
     public boolean payMemorizeCost(Player player, MemoryStone stone) {
+	MethodAccount account = Methods.getMethod().getAccount(player.getName());
+	if (account == null) {
+	    return false;
+	}
+
 	double cost = stone.getMemorizeCost();
-	if (economy.payFrom(player, cost)) {
+	if (!account.hasEnough(cost)) {
+	    return false;
+	}
+
+	if (account.subtract(cost)) {
 	    if (Config.isEconomyOwnerPaid()) {
 		String owner = stone.getStructure().getOwner();
 		if (owner == null || stone.getStructure().getOwner().length() == 0) {
 		    return true;
 		}
 
-		economy.payTo(owner, cost);
-
-		return true;
+		MethodAccount ownerAccount = Methods.getMethod().getAccount(owner);
+		if (ownerAccount != null) {
+		    ownerAccount.add(cost);
+		}
 	    }
+
 	    return true;
 	}
 
@@ -106,6 +125,20 @@ public class EconomyManager {
     }
 
     public boolean payBuildCost(Player player, StructureType stone) {
-	return economy.payFrom(player, getBuildCost(stone));
+	MethodAccount account = Methods.getMethod().getAccount(player.getName());
+	if (account == null) {
+	    return false;
+	}
+
+	double cost = getBuildCost(stone);
+	if (!account.hasEnough(cost)) {
+	    return false;
+	}
+
+	if (account.subtract(cost)) {
+	    return true;
+	}
+
+	return false;
     }
 }

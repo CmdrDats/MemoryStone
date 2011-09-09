@@ -7,7 +7,7 @@ description: >
              Build Memory Stones out of Stone and Obsidian and a Sign to name it
              Tap a Memory Stone with your compass to memorize its location
              Right click with a compass to select a memorized stone to teleport to
-softdepend: [Spout, iConomy, BOSEconomy] 
+softdepend: [Spout, iConomy, BOSEconomy, MultiCurrency] 
 permissions:
   memorystone.*:
     description: gives access to all normal MemoryStone permissions
@@ -22,6 +22,7 @@ permissions:
       memorystone.usefree: true
       memorystone.usewithoutcooldown: true
       memorystone.useinstantly: true
+      memorystone.useanywhere: true
   memorystone.build:
     description: allows user to build Memory Stones
     default: true
@@ -45,6 +46,9 @@ permissions:
     default: false
   memorystone.allmemorized:
     description: allows user to teleport to any stone without first memorizing it.
+    default: false
+  memorystone.useanywhere:
+    description: allows user to teleport without being in proximity of another stone
     default: false
     
   memorystone.create.*:

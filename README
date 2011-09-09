@@ -6,6 +6,16 @@ This plugin for minecraft Bukkit lets you create Memory Stone structures. You ca
 ChangeLog:
 ----------
 
+1.0.6
+	- Teleport other with other player's name on title of selection screen
+	- Teleport within distance of another stone config option
+	- Fix up double text when selecting destination without Spout
+	- Changed the EconomyManager to Register to support all versions of iConomy, BOSEconomy, Essentials Economy and MultiCurrency
+	- Supports pressing a hotkey to fire up the teleportation screen, defaults to 'C' - Requires Spout on server and SpoutCraft client.
+
+1.0.5a
+	- Removed dependency to Spout and tested with vanilla CraftBukkit
+
 1.0.5
 	- Fixed up NPE on loading structuretypes without distance
 	- Added iConomy Support
@@ -68,6 +78,7 @@ The Spout team
 tprk77 for HealingTotem - I used his awesome structure code - this should really be in the Core Bukkit code.
 krinsdeath for ChestSync - I used some of his coding ideas and signage code.
 ne0nx3r0 and Specops343 of BlueTelepad - Their code helped me get the yaw and pitch correct.
+Nijikokun for Register - Awesome work!
 
 Also, credit goes to the following people for their fantastic input:
 

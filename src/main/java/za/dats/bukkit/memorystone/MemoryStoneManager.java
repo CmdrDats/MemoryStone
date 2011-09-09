@@ -529,4 +529,8 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
     public List<MemoryStone> getNoTeleportStones() {
 	return noTeleportStones;
     }
+
+    public Collection<MemoryStone> getStones() {
+	return namedMap.values();
+    }
 }

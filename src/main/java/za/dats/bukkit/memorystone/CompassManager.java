@@ -9,40 +9,35 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityListener;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.MaterialData;
-import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.util.config.Configuration;
 import org.getspout.spoutapi.SpoutManager;
-import org.getspout.spoutapi.inventory.CraftingInventory;
+import org.getspout.spoutapi.event.input.InputListener;
+import org.getspout.spoutapi.event.input.KeyReleasedEvent;
+import org.getspout.spoutapi.gui.ScreenType;
+import org.getspout.spoutapi.keyboard.Keyboard;
+import org.getspout.spoutapi.keyboard.KeyboardBinding;
+import org.getspout.spoutapi.keyboard.KeyboardManager;
 import org.getspout.spoutapi.player.SpoutPlayer;
 
-import sun.security.action.GetLongAction;
-
 import za.dats.bukkit.memorystone.economy.EconomyManager;
-import za.dats.bukkit.memorystone.ui.SpoutLocationPopupManager;
-import za.dats.bukkit.memorystone.ui.SpoutLocationPopupManager.LocationPopupListener;
+import za.dats.bukkit.memorystone.ui.LocationPopupListener;
 
 public class CompassManager extends PlayerListener {
     private static class Teleport {
@@ -53,18 +48,22 @@ public class CompassManager extends PlayerListener {
 	long lastFizzleTime;
 	long lastEventTime;
 	Player teleportEntity;
-	MemoryStone destination;
     }
 
     private final MemoryStonePlugin plugin;
-    private final Map<String, Set<MemoryStone>> memorized = new HashMap<String, Set<MemoryStone>>();
-    private final Map<String, String> selected = new HashMap<String, String>();
-    private final Map<String, Teleport> teleporting = new HashMap<String, Teleport>();
+    private final Map<String, Set<MemoryStone>> memorized;
+    private final Map<String, String> selected;
+    private final Map<String, Teleport> teleporting;
     private final String locationsFile = "locations.yml";
-    private final List<Material> skippedInteractionBlocks = new ArrayList<Material>();
+    private final List<Material> skippedInteractionBlocks;
 
     public CompassManager(MemoryStonePlugin plugin) {
 	this.plugin = plugin;
+	memorized = new HashMap<String, Set<MemoryStone>>();
+	selected = new HashMap<String, String>();
+	teleporting = new HashMap<String, Teleport>();
+
+	skippedInteractionBlocks = new ArrayList<Material>();
 	skippedInteractionBlocks.add(Material.BED_BLOCK);
 	skippedInteractionBlocks.add(Material.BED);
 	skippedInteractionBlocks.add(Material.CHEST);
@@ -89,7 +88,7 @@ public class CompassManager extends PlayerListener {
 		    if (o1.equals(o2)) {
 			return 0;
 		    }
-		    
+
 		    if (o1.getStructure().getWorld().getName().equals(o2.getStructure().getWorld().getName())) {
 			double o1Distance = player.getLocation().distanceSquared(o1.getSign().getBlock().getLocation());
 			double o2Distance = player.getLocation().distanceSquared(o2.getSign().getBlock().getLocation());
@@ -189,6 +188,30 @@ public class CompassManager extends PlayerListener {
 	pm.registerEvent(Event.Type.PLAYER_INTERACT, this, Priority.Normal, plugin);
 	pm.registerEvent(Event.Type.PLAYER_INTERACT_ENTITY, this, Priority.Normal, plugin);
 	pm.registerEvent(Event.Type.PLAYER_MOVE, this, Priority.Normal, plugin);
+
+	if (plugin.isSpoutEnabled() && Config.getTeleportKey().length() > 0) {
+	    final Keyboard teleportKey = Keyboard.valueOf("KEY_" + Config.getTeleportKey());
+	    InputListener inputListener = new InputListener() {
+		@Override
+		public void onKeyReleasedEvent(KeyReleasedEvent event) {
+		    if (event.getKey().equals(teleportKey) && event.getScreenType().equals(ScreenType.GAME_SCREEN)) {
+			Player p = event.getPlayer();
+			
+			int index = p.getInventory().first(Config.getTeleportItem());
+			if (index == -1) {
+			    p.sendMessage(Config.getColorLang("teleportitemnotfound"));
+			    return;
+			}
+			
+			ItemStack[] contents = p.getInventory().getContents();
+			ItemStack item = contents[index];
+			fireTeleportWithItem(item, p);
+		    }
+		}
+	    };
+	    pm.registerEvent(Event.Type.CUSTOM_EVENT, inputListener, Event.Priority.Normal, plugin);
+
+	}
 	loadLocations();
     }
 
@@ -201,7 +224,7 @@ public class CompassManager extends PlayerListener {
 		event.getPlayer().sendMessage(Config.getColorLang("alreadymemorized", "name", stone.getName()));
 		return true;
 	    }
-	    
+
 	    EconomyManager economyManager = MemoryStonePlugin.getInstance().getEconomyManager();
 	    if (economyManager.isEconomyEnabled() && (!event.getPlayer().hasPermission("memorystone.usefree"))
 		    && !economyManager.payMemorizeCost(event.getPlayer(), stone)) {
@@ -322,12 +345,9 @@ public class CompassManager extends PlayerListener {
 	return result;
     }
 
-    public void startTeleport(final MemoryStone stone, PlayerEvent event, Player other) {
-	final ItemStack item = event.getPlayer().getItemInHand();
-	final Player player = event.getPlayer();
-
+    public void startTeleport(final MemoryStone stone, final Player caster, ItemStack item, Player other) {
 	// check permissions!
-	if (!event.getPlayer().hasPermission("memorystone.usefree")) {
+	if (!caster.hasPermission("memorystone.usefree")) {
 	    if ((Config.getMaxUsesPerItem() > 0)
 		    && (item.getDurability() == 0 || item.getDurability() > Config.getMaxUsesPerItem())) {
 		item.setDurability((short) Config.getMaxUsesPerItem());
@@ -337,81 +357,78 @@ public class CompassManager extends PlayerListener {
 	final String name = stone.getName();
 	final Sign sign = (Sign) stone.getSign();
 	if (sign == null) {
-	    event.getPlayer().sendMessage(Config.getColorLang("notfound", "name", name));
+	    caster.sendMessage(Config.getColorLang("notfound", "name", name));
 	    return;
 	}
 
-	Teleport teleport = getTeleport(event.getPlayer());
+	Teleport teleport = getTeleport(caster);
 
-	if (!player.hasPermission("memorystone.usewithoutcooldown")) {
+	if (!caster.hasPermission("memorystone.usewithoutcooldown")) {
 	    long now = new Date().getTime();
 	    if (now - teleport.lastTeleportTime < Config.getCooldownTime() * 1000) {
 		long left = Config.getCooldownTime() - ((now - teleport.lastTeleportTime) / 1000);
-		event.getPlayer().sendMessage(Config.getColorLang("cooldown", "left", "" + left));
+		caster.sendMessage(Config.getColorLang("cooldown", "left", "" + left));
 		return;
 	    }
 
 	    if (now - teleport.lastFizzleTime < Config.getFizzleCooldownTime() * 1000) {
 		long left = Config.getFizzleCooldownTime() - ((now - teleport.lastFizzleTime) / 1000);
-		event.getPlayer().sendMessage(Config.getColorLang("cooldown", "left", "" + left));
+		caster.sendMessage(Config.getColorLang("cooldown", "left", "" + left));
 		return;
 	    }
 	}
 
-	if (!event.getPlayer().hasPermission("memorystone.usefree")) {
+	if (!caster.hasPermission("memorystone.usefree")) {
 	    EconomyManager economyManager = MemoryStonePlugin.getInstance().getEconomyManager();
-	    if (economyManager.isEconomyEnabled() && !economyManager.payTeleportCost(player, stone)) {
-		event.getPlayer().sendMessage(
-			Config.getColorLang("cantaffordteleport", "name", name, "cost",
-				economyManager.getFormattedCost(stone.getTeleportCost())));
+	    if (economyManager.isEconomyEnabled() && !economyManager.payTeleportCost(caster, stone)) {
+		caster.sendMessage(Config.getColorLang("cantaffordteleport", "name", name, "cost",
+			economyManager.getFormattedCost(stone.getTeleportCost())));
 		return;
 	    }
 	}
 
-	if (other.equals(event.getPlayer())) {
-	    event.getPlayer().sendMessage(Config.getColorLang("startrecall", "name", stone.getName()));
+	if (other.equals(caster)) {
+	    caster.sendMessage(Config.getColorLang("startrecall", "name", stone.getName()));
 	} else {
-	    event.getPlayer().sendMessage(
-		    Config.getColorLang("teleportingother", "name", other.getName(), "destination", name));
-	    other.sendMessage(Config.getColorLang("teleportedbyother", "name", event.getPlayer().getName(),
-		    "destination", name));
+	    caster.sendMessage(Config.getColorLang("teleportingother", "name", other.getName(), "destination", name));
+	    other.sendMessage(Config.getColorLang("teleportedbyother", "name", caster.getName(), "destination", name));
 
 	}
 
-	if (Config.getMaxUsesPerItem() > 0 && (!player.hasPermission("memorystone.usefree"))) {
+	if (Config.getMaxUsesPerItem() > 0 && (!caster.hasPermission("memorystone.usefree"))) {
 	    item.setDurability((short) (item.getDurability() - 1));
 
 	    if (item.getDurability() == 0) {
 		if (item.getAmount() == 1) {
-		    player.setItemInHand(null);
+		    caster.setItemInHand(null);
 		    // item.setDurability((short)11);
 		    // player.getInventory().remove(item);
 		} else {
 		    item.setDurability((short) 3);
 		    item.setAmount(item.getAmount() - 1);
 		}
-		player.sendMessage(Config.getColorLang("consumed"));
+		caster.sendMessage(Config.getColorLang("consumed"));
 	    } else {
-		player.sendMessage(Config.getColorLang("chargesleft", "numcharges", "" + item.getDurability()));
+		caster.sendMessage(Config.getColorLang("chargesleft", "numcharges", "" + item.getDurability()));
 
 	    }
 	}
 
 	int waitTime = Config.getCastingTime() * 10;
-	if (player.hasPermission("memorystone.useinstantly")) {
+	if (caster.hasPermission("memorystone.useinstantly")) {
 	    waitTime = 1;
 	}
 
 	int task = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 	    public void run() {
-		Teleport teleport = getTeleport(player);
+		Teleport teleport = getTeleport(caster);
 		teleport.taskId = -1;
 		teleport.started = false;
 		if (teleport.cancelled) {
 		    return;
 		}
 
-		if (!teleport.teleportEntity.equals(player)) {
+		if (!teleport.teleportEntity.equals(caster)) {
 		    Teleport other = getTeleport((Player) teleport.teleportEntity);
 		    other.taskId = -1;
 		    other.started = false;
@@ -424,7 +441,7 @@ public class CompassManager extends PlayerListener {
 
 		teleport.lastTeleportTime = new Date().getTime();
 
-		Location destination = getDestinationLocation(stone, player);
+		Location destination = getDestinationLocation(stone, caster);
 
 		teleport.teleportEntity.teleport(destination);
 	    }
@@ -432,11 +449,10 @@ public class CompassManager extends PlayerListener {
 
 	teleport.cancelled = false;
 	teleport.taskId = task;
-	teleport.destination = stone;
 	teleport.started = true;
 	teleport.teleportEntity = other;
 
-	if (!teleport.teleportEntity.equals(player)) {
+	if (!teleport.teleportEntity.equals(caster)) {
 	    Teleport otherTeleport = getTeleport((Player) teleport.teleportEntity);
 	    otherTeleport.cancelled = false;
 	    otherTeleport.taskId = task;
@@ -482,23 +498,38 @@ public class CompassManager extends PlayerListener {
 	    return;
 	}
 
-	final SpoutPlayer p = (SpoutPlayer) event.getPlayer();
-	if (p.isSpoutCraftEnabled()) {
-	    plugin.getSpoutLocationPopupManager().showPopup(p, getPlayerLocations(p.getWorld().getName(), p),
-		    Config.getColorLang("selectlocation"), new LocationPopupListener() {
-			public void selected(MemoryStone stone) {
-			    tryTeleportOther(event, p, stone.getName());
-			}
-		    });
-	} else {
-	    String name = selected.get(event.getPlayer().getName());
-	    tryTeleportOther(event, p, name);
+	if (!(event.getPlayer().hasPermission("memorystone.useanywhere") || Config.getMinProximityToStoneForTeleport() == 0)) {
+	    if (!withinDistanceOfAnyStone(event.getPlayer(), Config.getMinProximityToStoneForTeleport())) {
+		event.getPlayer().sendMessage(Config.getColorLang("outsideproximity"));
+		return;
+	    }
 	}
 
+	if (plugin.isSpoutEnabled()) {
+	    if (((org.getspout.spoutapi.player.SpoutPlayer) event.getPlayer()).isSpoutCraftEnabled()) {
+		String name = ((HumanEntity) event.getRightClicked()).getName();
+		plugin.getSpoutLocationPopupManager().showPopup(event.getPlayer(),
+			getPlayerLocations(event.getPlayer().getWorld().getName(), event.getPlayer()),
+			Config.getColorLang("selectotherlocation", "name", name), new LocationPopupListener() {
+			    public void selected(MemoryStone stone) {
+				tryTeleportOther(event, event.getPlayer(), stone.getName());
+			    }
+			});
+	    } else {
+		String name = selected.get(event.getPlayer().getName());
+		tryTeleportOther(event, event.getPlayer(), name);
+	    }
+	} else {
+	    String name = selected.get(event.getPlayer().getName());
+	    tryTeleportOther(event, event.getPlayer(), name);
+	}
     }
 
     private boolean isInNoTeleportZone(Player player) {
 	for (MemoryStone stone : plugin.getMemoryStoneManager().getNoTeleportStones()) {
+	    if (!stone.getStructure().getRootBlock().getWorld().getName().equals(player.getWorld().getName())) {
+		continue;
+	    }
 	    double distance = player.getLocation().distanceSquared(stone.getStructure().getRootBlock().getLocation());
 	    if (distance < stone.getDistanceLimit()) {
 		player.sendMessage(Config.getColorLang("noteleportzone"));
@@ -509,7 +540,7 @@ public class CompassManager extends PlayerListener {
 	return false;
     }
 
-    private void tryTeleportOther(final PlayerInteractEntityEvent event, final SpoutPlayer p, String name) {
+    private void tryTeleportOther(final PlayerInteractEntityEvent event, final Player p, String name) {
 	if (name != null) {
 	    MemoryStone stone = plugin.getMemoryStoneManager().getNamedMemoryStone(name);
 	    if (stone == null) {
@@ -522,25 +553,53 @@ public class CompassManager extends PlayerListener {
 	    Player other = (Player) event.getRightClicked();
 	    cancelTeleport(other);
 
-	    startTeleport(stone, event, other);
+	    startTeleport(stone, event.getPlayer(), event.getPlayer().getItemInHand(), other);
 	} else {
 	    event.getPlayer().sendMessage(Config.getColorLang("notmemorized"));
 
 	}
     }
 
+    public void fireTeleportWithItem(final ItemStack item, final Player player) {
+	if (!(player.hasPermission("memorystone.useanywhere") || Config.getMinProximityToStoneForTeleport() == 0)) {
+	    if (!withinDistanceOfAnyStone(player, Config.getMinProximityToStoneForTeleport())) {
+		player.sendMessage(Config.getColorLang("outsideproximity"));
+		return;
+	    }
+	}
+
+	if (plugin.isSpoutEnabled()) {
+	    if (((org.getspout.spoutapi.player.SpoutPlayer) player).isSpoutCraftEnabled()) {
+		plugin.getSpoutLocationPopupManager().showPopup(player,
+			getPlayerLocations(player.getWorld().getName(), player), Config.getColorLang("selectlocation"),
+			new LocationPopupListener() {
+			    public void selected(MemoryStone stone) {
+				tryTeleport(player, item, stone.getName());
+			    }
+			});
+	    } else {
+		String name = selected.get(player.getName());
+		tryTeleport(player, item, name);
+	    }
+	} else {
+	    String name = selected.get(player.getName());
+	    tryTeleport(player, item, name);
+	}
+    }
+
     @Override
     public void onPlayerInteract(final PlayerInteractEvent event) {
-	if (event.getPlayer().getItemInHand().getType() != Config.getTeleportItem()) {
+	Player player = event.getPlayer();
+	if (player.getItemInHand().getType() != Config.getTeleportItem()) {
 	    return;
 	}
 
 	// check permissions!
-	if (!event.getPlayer().hasPermission("memorystone.use")) {
+	if (!player.hasPermission("memorystone.use")) {
 	    return;
 	}
 
-	Teleport teleport = getTeleport(event.getPlayer());
+	Teleport teleport = getTeleport(player);
 	long now = new Date().getTime();
 	if (now - teleport.lastEventTime < 100) {
 	    return;
@@ -559,14 +618,16 @@ public class CompassManager extends PlayerListener {
 	    }
 	}
 
-	if (isInNoTeleportZone(event.getPlayer())) {
+	if (isInNoTeleportZone(player)) {
 	    return;
 	}
 
 	if (event.getAction().equals(Action.LEFT_CLICK_BLOCK) || event.getAction().equals(Action.LEFT_CLICK_AIR)) {
-	    SpoutPlayer p = (SpoutPlayer) event.getPlayer();
-	    if (p.isSpoutCraftEnabled()) {
-		return;
+	    if (plugin.isSpoutEnabled()) {
+		org.getspout.spoutapi.player.SpoutPlayer p = (org.getspout.spoutapi.player.SpoutPlayer) player;
+		if (p.isSpoutCraftEnabled()) {
+		    return;
+		}
 	    }
 	    // Make interaction with interactable blocks cleaner
 	    if (event.getClickedBlock() != null && skippedInteractionBlocks.contains(event.getClickedBlock().getType())) {
@@ -577,12 +638,12 @@ public class CompassManager extends PlayerListener {
 		return;
 	    }
 
-	    Set<MemoryStone> memory = getPlayerLocations(event.getPlayer().getWorld().getName(), event.getPlayer());
+	    Set<MemoryStone> memory = getPlayerLocations(player.getWorld().getName(), player);
 	    if (memory == null || memory.size() == 0) {
 		return;
 	    }
 
-	    String selectedName = selected.get(event.getPlayer().getName());
+	    String selectedName = selected.get(player.getName());
 	    if (selectedName == null) {
 		selectedName = memory.iterator().next().getName();
 	    } else {
@@ -606,20 +667,24 @@ public class CompassManager extends PlayerListener {
 		}
 	    }
 
-	    if (!event.getPlayer().hasPermission("memorystone.usefree")) {
+	    boolean messageSent = false;
+	    if (!player.hasPermission("memorystone.usefree")) {
 		EconomyManager economyManager = MemoryStonePlugin.getInstance().getEconomyManager();
 		if (economyManager.isEconomyEnabled()) {
 		    MemoryStone stone = MemoryStonePlugin.getInstance().getMemoryStoneManager()
 			    .getNamedMemoryStone(selectedName);
 
-		    event.getPlayer().sendMessage(
-			    Config.getColorLang("selectwithcost", "name", selectedName, "cost",
-				    economyManager.getFormattedCost(stone.getTeleportCost())));
+		    player.sendMessage(Config.getColorLang("selectwithcost", "name", selectedName, "cost",
+			    economyManager.getFormattedCost(stone.getTeleportCost())));
+		    messageSent = true;
 		}
 	    }
-	    event.getPlayer().sendMessage(Config.getColorLang("select", "name", selectedName));
 
-	    selected.put(event.getPlayer().getName(), selectedName);
+	    if (!messageSent) {
+		player.sendMessage(Config.getColorLang("select", "name", selectedName));
+	    }
+
+	    selected.put(player.getName(), selectedName);
 	    event.setCancelled(true);
 
 	}
@@ -630,25 +695,32 @@ public class CompassManager extends PlayerListener {
 		return;
 	    }
 
-	    final SpoutPlayer p = (SpoutPlayer) event.getPlayer();
-	    if (p.isSpoutCraftEnabled()) {
-		plugin.getSpoutLocationPopupManager().showPopup(p, getPlayerLocations(p.getWorld().getName(), p),
-			Config.getColorLang("selectlocation"), new LocationPopupListener() {
-			    public void selected(MemoryStone stone) {
-				tryTeleport(event, p, stone.getName());
-			    }
-			});
-	    } else {
-		String name = selected.get(event.getPlayer().getName());
-		tryTeleport(event, p, name);
-	    }
+	    fireTeleportWithItem(player.getItemInHand(), player);
 
 	}
 
 	super.onPlayerInteract(event);
     }
 
-    private void tryTeleport(final PlayerInteractEvent event, SpoutPlayer p, String name) {
+    private boolean withinDistanceOfAnyStone(Player player, int minProximityToStoneForTeleport) {
+	minProximityToStoneForTeleport = minProximityToStoneForTeleport * minProximityToStoneForTeleport;
+	for (MemoryStone stone : plugin.getMemoryStoneManager().getStones()) {
+	    if (stone.getSign() == null) {
+		continue;
+	    }
+
+	    if (!stone.getSign().getWorld().getName().equals(player.getWorld().getName())) {
+		continue;
+	    }
+
+	    if (player.getLocation().distanceSquared(stone.getSign().getBlock().getLocation()) < minProximityToStoneForTeleport) {
+		return true;
+	    }
+	}
+	return false;
+    }
+
+    private void tryTeleport(Player p, ItemStack item, String name) {
 	if (name != null) {
 	    MemoryStone stone = plugin.getMemoryStoneManager().getNamedMemoryStone(name);
 	    if (stone == null) {
@@ -658,7 +730,7 @@ public class CompassManager extends PlayerListener {
 	    }
 
 	    cancelTeleport(p);
-	    startTeleport(stone, event, p);
+	    startTeleport(stone, p, item, p);
 
 	} else {
 	    p.sendMessage(Config.getColorLang("notmemorized"));

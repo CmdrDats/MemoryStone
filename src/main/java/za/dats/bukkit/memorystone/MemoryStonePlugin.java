@@ -23,8 +23,8 @@ public class MemoryStonePlugin extends JavaPlugin {
     private PluginManager pm;
     private StructureManager structureManager = new StructureManager(this, "[MemoryStone] ");
     private MemoryStoneManager memoryStoneManager = new MemoryStoneManager(this);
-    private CompassManager compassManager = new CompassManager(this);
-    private SpoutLocationPopupManager spoutLocationPopupManager = new SpoutLocationPopupManager(this);
+    private CompassManager compassManager;
+    private SpoutLocationPopupManager spoutLocationPopupManager;
     private EconomyManager economyManager = new EconomyManager();
     private static MemoryStonePlugin instance;
 
@@ -44,6 +44,7 @@ public class MemoryStonePlugin extends JavaPlugin {
 	instance = this;
 	Utility.init(this);
 	Config.init(this);
+	
 	pm = getServer().getPluginManager();
 	pdf = getDescription();
 
@@ -55,13 +56,17 @@ public class MemoryStonePlugin extends JavaPlugin {
 	structureManager.registerEvents();
 	
 	memoryStoneManager.registerEvents();
+	compassManager = new CompassManager(this);
+	
 	compassManager.registerEvents();
-	spoutLocationPopupManager.registerEvents();
 	
-	
+	if (isSpoutEnabled()) {
+	    spoutLocationPopupManager = new SpoutLocationPopupManager(this);
+	    spoutLocationPopupManager.registerEvents();
+	}
     }
 
-    public boolean hasSpout() {
+    public boolean isSpoutEnabled() {
 	if (pm.isPluginEnabled("Spout")) {
 	    return true;
 	}
