@@ -2,6 +2,7 @@ package za.dats.bukkit.memorystone;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -113,8 +114,14 @@ public class CompassManager extends PlayerListener {
 	}
 
 	String playerName = player.getName();
-	if (plugin.getServer().getPlayer(playerName).hasPermission("memorystone.allmemorized")) {
-	    result.addAll(plugin.getMemoryStoneManager().getLocalStones(world));
+	boolean hasPermission = player.hasPermission("memorystone.allmemorized");
+	if (hasPermission) {
+	    Collection<? extends MemoryStone> localStones = plugin.getMemoryStoneManager().getLocalStones(world);
+	    for (MemoryStone memoryStone : localStones) {
+		if (memoryStone.getSign() != null) {
+		    result.add(memoryStone);
+		}
+	    }
 	} else {
 	    Set<MemoryStone> set = memorized.get(playerName);
 	    if (set == null) {

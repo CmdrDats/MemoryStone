@@ -5,13 +5,15 @@ This plugin for minecraft Bukkit lets you create Memory Stone structures. You ca
 
 ChangeLog:
 ----------
-
+1.0.6a
+	- Fixed up a small issue when you cycle locations if you have the memorystone.allmemorized permission
+	
 1.0.6
 	- Teleport other with other player's name on title of selection screen
 	- Teleport within distance of another stone config option
 	- Fix up double text when selecting destination without Spout
 	- Changed the EconomyManager to Register to support all versions of iConomy, BOSEconomy, Essentials Economy and MultiCurrency
-	- Supports pressing a hotkey to fire up the teleportation screen, defaults to 'C' - Requires Spout on server and SpoutCraft client.
+	- Now supports pressing a hotkey to fire up the teleportation screen, defaults to 'C' - Requires Spout on server and SpoutCraft client.
 
 1.0.5a
 	- Removed dependency to Spout and tested with vanilla CraftBukkit
