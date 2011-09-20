@@ -14,6 +14,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.block.Action;
@@ -32,6 +33,7 @@ import org.getspout.spoutapi.inventory.CraftingInventory;
 import za.dats.bukkit.memorystone.MemoryStone.StoneType;
 import za.dats.bukkit.memorystone.economy.EconomyManager;
 import za.dats.bukkit.memorystone.util.StructureListener;
+import za.dats.bukkit.memorystone.util.StructureManager;
 import za.dats.bukkit.memorystone.util.structure.Rotator;
 import za.dats.bukkit.memorystone.util.structure.Structure;
 import za.dats.bukkit.memorystone.util.structure.StructureType;
@@ -55,7 +57,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	pm.registerEvent(Event.Type.BLOCK_BREAK, this, Event.Priority.Normal, memoryStonePlugin);
     }
 
-    public void structurePlaced(BlockPlaceEvent event, Structure structure) {
+    public void structurePlaced(Player player, Structure structure) {
 	MemoryStone stone = new MemoryStone();
 	stone.setStructure(structure);
 
@@ -64,11 +66,11 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	if (stone.getType().equals(StoneType.NOTELEPORT)) {
 	    noTeleportStones.add(stone);
 	}
-	event.getPlayer().sendMessage(
+	player.sendMessage(
 		Utility.color(Config.getColorLang("createConfirm", "name", structure.getStructureType().getName())));
     }
 
-    public void structureDestroyed(BlockBreakEvent event, Structure structure) {
+    public void structureDestroyed(Player player, Structure structure) {
 	MemoryStone stone = structureMap.get(structure);
 	if (stone.getType().equals(StoneType.NOTELEPORT)) {
 	    noTeleportStones.remove(stone);
@@ -98,7 +100,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	}
 
 	structureMap.remove(structure);
-	event.getPlayer().sendMessage(Utility.color(Config.getColorLang("destroyed")));
+	player.sendMessage(Utility.color(Config.getColorLang("destroyed")));
     }
 
     public void structureLoaded(Structure structure, ConfigurationNode node) {
@@ -211,7 +213,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	proto.addMetadata("type", "MEMORYSTONE");
 	proto.addMetadata("global", "false");
 	proto.addMetadata("permissionRequired", "memorystone.create.local");
-	proto.addMetadata("distanceLimit", "512");
+	proto.addMetadata("distanceLimit", "0");
 	proto.addMetadata("teleportcost", "50");
 	proto.addMetadata("memorizecost", "200");
 	proto.addMetadata("buildcost", "1000");
@@ -232,7 +234,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	proto.addMetadata("type", "MEMORYSTONE");
 	proto.addMetadata("crossworld", "true");
 	proto.addMetadata("permissionRequired", "memorystone.create.crossworld");
-	proto.addMetadata("distanceLimit", "512");
+	proto.addMetadata("distanceLimit", "0");
 	proto.addMetadata("teleportcost", "75");
 	proto.addMetadata("memorizecost", "750");
 	proto.addMetadata("buildcost", "3000");
@@ -270,7 +272,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	proto.addMetadata("type", "MEMORYSTONE");
 	proto.addMetadata("global", "true");
 	proto.addMetadata("permissionRequired", "memorystone.create.global");
-	proto.addMetadata("distanceLimit", "1024");
+	proto.addMetadata("distanceLimit", "0");
 	proto.addMetadata("teleportcost", "65");
 	proto.addMetadata("memorizecost", "500");
 	proto.addMetadata("buildcost", "2000");
@@ -309,7 +311,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	proto.addMetadata("crossworld", "true");
 	proto.addMetadata("global", "true");
 	proto.addMetadata("permissionRequired", "memorystone.create.crossworldglobal");
-	proto.addMetadata("distanceLimit", "1024");
+	proto.addMetadata("distanceLimit", "0");
 	proto.addMetadata("teleportcost", "150");
 	proto.addMetadata("memorizecost", "1000");
 	proto.addMetadata("buildcost", "5000");
@@ -424,10 +426,22 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	if (event.isCancelled()) {
 	    return;
 	}
+	memoryStonePlugin.info("Processing sign change event");
 
 	final Sign state = (Sign) event.getBlock().getState();
-	final MemoryStone stone = getMemoryStructureBehind(state);
-
+	MemoryStone stone = getMemoryStructureBehind(state);
+	if (stone == null) {
+	    // If stone isn't found, try initiate a 'create' on the block behind it.
+	    org.bukkit.material.Sign aSign = (org.bukkit.material.Sign) state.getData();
+	    Block behind = state.getBlock().getRelative(aSign.getFacing().getOppositeFace());
+	    
+	    Structure structure = memoryStonePlugin.getStructureManager().checkForStone(event.getPlayer(), behind);
+	    if (structure != null) {
+		stone = getMemoryStructureBehind(state);
+		
+	    }
+	}
+	
 	if (stone != null && stone.getType().equals(StoneType.MEMORYSTONE)) {
 	    // check permissions!
 	    if (!event.getPlayer().hasPermission("memorystone.build")) {
@@ -478,12 +492,14 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	    if ("true".equals(stone.getStructure().getStructureType().getMetadata().get("global"))) {
 		globalStones.add(stone);
 	    }
+	    
+	    final MemoryStone finalStone = stone;
 	    memoryStonePlugin.getServer().getScheduler().scheduleSyncDelayedTask(memoryStonePlugin, new Runnable() {
 		public void run() {
 		    updateSign(state);
 		    Sign newSign = (Sign) new Location(state.getWorld(), state.getX(), state.getY(), state.getZ())
 			    .getBlock().getState();
-		    stone.setSign(newSign);
+		    finalStone.setSign(newSign);
 		    memoryStonePlugin.getStructureManager().saveStructures();
 
 		}

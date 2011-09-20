@@ -17,6 +17,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import za.dats.bukkit.memorystone.Config;
+import za.dats.bukkit.memorystone.Config.MemoryEffect;
 import za.dats.bukkit.memorystone.MemoryStonePlugin;
 import za.dats.bukkit.memorystone.Utility;
 import za.dats.bukkit.memorystone.economy.EconomyManager;
@@ -52,74 +53,11 @@ public class StructureBlockListener extends BlockListener {
 
     @Override
     public void onBlockPlace(BlockPlaceEvent event) {
-	if (event.isCancelled())
+	if (event.isCancelled()) {
 	    return;
-
-	String owner = event.getPlayer().getName();
-
-	Block placedblock = event.getBlockPlaced();
-	List<StructureType> structureTypes = structureManager.getStructureTypes();
-
-	TOTEMBUILD: for (StructureType structureType : structureTypes) {
-
-	    Structure structure = new Structure(structureType, placedblock, owner);
-	    if (!structure.verifyStructure()) {
-		continue;
-	    }
-
-	    // check permissions!
-	    Player player = event.getPlayer();
-
-	    if (!player.hasPermission("memorystone.build")) {
-		event.setCancelled(true);
-		player.sendMessage(Config.getColorLang("nobuildpermission"));
-		return;
-	    }
-
-	    if (structureType.getPermissionRequired() != null && structureType.getPermissionRequired().length() > 0) {
-		if (!player.hasPermission(structureType.getPermissionRequired())) {
-		    event.setCancelled(true);
-		    player.sendMessage(Config.getColorLang("nobuildpermission"));
-		    return;
-		}
-	    }
-	    
-	    
-
-	    // check the number of totems
-	    /*
-	     * Set<Structure> totemset = structureManager.getStructuresFromPlayer(player); if (totemset != null &&
-	     * totemset.size() >= this.plugin.getConfigManager().getStructuresPerPlayer() &&
-	     * !player.hasPermission("healingtotem.unlimitedbuild")) { event.setCancelled(true);
-	     * player.sendMessage(ChatColor.RED + "You have reached the maximum number of totems you can build.");
-	     * return; }
-	     */
-
-	    for (Block block : structure.getBlocks()) {
-		if (structureManager.getStructuresFromBlock(block) != null) {
-		    break TOTEMBUILD;
-		}
-	    }
-	    
-	    EconomyManager economyManager = MemoryStonePlugin.getInstance().getEconomyManager();
-	    if (economyManager.isEconomyEnabled() && !player.hasPermission("memorystone.usefree")) {
-		if (!economyManager.payBuildCost(player, structureType)) {
-		    event.setCancelled(true);
-		    player.sendMessage(Config.getColorLang("cantaffordbuild", "cost", economyManager.getBuildCostString(structureType)));
-		    return;
-		}
-	    }
-
-	    // lightning strike!
-	    if (Config.useLightning()) {
-		placedblock.getWorld().strikeLightningEffect(placedblock.getLocation());
-	    }
-
-	    structure.setOwner(event.getPlayer().getName());
-	    structureManager.addStructure(event, structure);
-	    structureManager.saveStructures();
-
 	}
+
+	Structure block = checkPlacedBlock(event.getPlayer(), event.getBlock(), event);
     }
 
     @Override
@@ -143,7 +81,7 @@ public class StructureBlockListener extends BlockListener {
 	}
 
 	// lightning strike!
-	if (Config.useLightning()) {
+	if (Config.isEffectEnabled(MemoryEffect.LIGHTNING_ON_BREAK)) {
 	    brokenblock.getWorld().strikeLightningEffect(brokenblock.getLocation());
 	}
 
@@ -161,7 +99,7 @@ public class StructureBlockListener extends BlockListener {
 	if (event.isCancelled()) {
 	    return;
 	}
-	
+
 	for (Block brokenBlock : event.blockList()) {
 	    Set<Structure> totems = structureManager.getStructuresFromBlock(brokenBlock);
 	    if (totems != null) {
@@ -169,6 +107,80 @@ public class StructureBlockListener extends BlockListener {
 		return;
 	    }
 	}
+    }
+
+    public Structure checkPlacedBlock(Player player, Block behind, BlockPlaceEvent event) {
+	String owner = player.getName();
+
+	Block placedblock = behind;
+	List<StructureType> structureTypes = structureManager.getStructureTypes();
+
+	TOTEMBUILD: for (StructureType structureType : structureTypes) {
+
+	    Structure structure = new Structure(structureType, placedblock, owner);
+	    if (!structure.verifyStructure()) {
+		continue;
+	    }
+
+	    // check permissions!
+
+	    if (!player.hasPermission("memorystone.build")) {
+		player.sendMessage(Config.getColorLang("nobuildpermission"));
+		if (event != null) {
+		    event.setCancelled(true);
+		}
+		return null;
+	    }
+
+	    if (structureType.getPermissionRequired() != null && structureType.getPermissionRequired().length() > 0) {
+		if (!player.hasPermission(structureType.getPermissionRequired())) {
+		    player.sendMessage(Config.getColorLang("nobuildpermission"));
+		    if (event != null) {
+			event.setCancelled(true);
+		    }
+		    return null;
+		}
+	    }
+
+	    // check the number of totems
+	    /*
+	     * Set<Structure> totemset = structureManager.getStructuresFromPlayer(player); if (totemset != null &&
+	     * totemset.size() >= this.plugin.getConfigManager().getStructuresPerPlayer() &&
+	     * !player.hasPermission("healingtotem.unlimitedbuild")) { event.setCancelled(true);
+	     * player.sendMessage(ChatColor.RED + "You have reached the maximum number of totems you can build.");
+	     * return; }
+	     */
+
+	    for (Block block : structure.getBlocks()) {
+		if (structureManager.getStructuresFromBlock(block) != null) {
+		    break TOTEMBUILD;
+		}
+	    }
+
+	    EconomyManager economyManager = MemoryStonePlugin.getInstance().getEconomyManager();
+	    if (economyManager.isEconomyEnabled() && !player.hasPermission("memorystone.usefree")) {
+		if (!economyManager.payBuildCost(player, structureType)) {
+		    player.sendMessage(Config.getColorLang("cantaffordbuild", "cost",
+			    economyManager.getBuildCostString(structureType)));
+		    if (event != null) {
+			event.setCancelled(true);
+		    }
+		    return null;
+		}
+	    }
+
+	    // lightning strike!
+	    if (Config.isEffectEnabled(MemoryEffect.LIGHTNING_ON_CREATE)) {
+		placedblock.getWorld().strikeLightningEffect(placedblock.getLocation());
+	    }
+
+	    structure.setOwner(player.getName());
+	    structureManager.addStructure(player, structure);
+	    structureManager.saveStructures();
+	    return structure;
+	}
+
+	return null;
     }
 
 }

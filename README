@@ -5,6 +5,21 @@ This plugin for minecraft Bukkit lets you create Memory Stone structures. You ca
 
 ChangeLog:
 ----------
+1.0.8
+	- Fixed up an NPE when only one location is memorized and you try teleport stone to stone from it
+	- Fixed a small bug if you use lava buckets in water to create your memory stones.
+
+1.0.7
+	- Set the default distanceLimit in structureTypes.yml to infinite on all default structure types. This was tripping a lot of people up.
+	- Replaced lightningEffect config option with effects.lightningOnCreate and effects.lightningOnBreak
+	- Added effects.lightningOnTeleportSource and effects.lightningOnTeleportDestination for effects when teleporting
+	- Allow for teleportItem to be set to NONE, which disabled teleporting with an item.
+	- Added stonetostone.enabled, to enable teleporting directly from a Memory Stone (without compass)
+	- Added stonetostone.item and stonetostone.maxUses if you want to have people pay for stonetostone teleporting
+	- Remove 'already memorized' message if stonetostone.enabled
+	- Fixed up a charges left bug (was rolling over to 3 charges regardless of max uses)
+	- Default language refers to <material> now instead of compass (lang.chargesleft, lang.consumed, lang.teleportitemnotfound)
+	
 1.0.6a
 	- Fixed up a small issue when you cycle locations if you have the memorystone.allmemorized permission
 	

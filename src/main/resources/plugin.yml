@@ -1,6 +1,6 @@
 name: MemoryStone
 main: za.dats.bukkit.memorystone.MemoryStonePlugin
-version: 1.0.6a
+version: 1.0.8
 website: http://www.dats.co.za
 author: CmdrDats
 description: >
@@ -31,6 +31,9 @@ permissions:
     default: true
   memorystone.use:
     description: allows user to teleport
+    default: true
+  memorystone.usestonetostone:
+    description: allows user to use stone to stone teleportation
     default: true
   memorystone.useonothers:
     description: allows user to teleport others

@@ -23,6 +23,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.config.Configuration;
 import org.bukkit.util.config.ConfigurationNode;
 
+import za.dats.bukkit.memorystone.MemoryStone;
 import za.dats.bukkit.memorystone.util.structure.BlockOffset;
 import za.dats.bukkit.memorystone.util.structure.Rotator;
 import za.dats.bukkit.memorystone.util.structure.Structure;
@@ -75,7 +76,7 @@ public class StructureManager {
 	return new ArrayList<StructureType>(this.structureTypes);
     }
 
-    public void addStructure(BlockPlaceEvent event, Structure structure) {
+    public void addStructure(Player player, Structure structure) {
 	this.structures.add(structure);
 
 	// add to block hash
@@ -98,9 +99,9 @@ public class StructureManager {
 	    existing.add(structure);
 	}
 
-	if (event != null) {
+	if (player != null) {
 	    for (StructureListener listener : listeners) {
-		listener.structurePlaced(event, structure);
+		listener.structurePlaced(player, structure);
 	    }
 	}
     }
@@ -127,7 +128,7 @@ public class StructureManager {
 	}
 
 	for (StructureListener listener : listeners) {
-	    listener.structureDestroyed(event, structure);
+	    listener.structureDestroyed(event.getPlayer(), structure);
 	}
 
     }
@@ -427,5 +428,9 @@ public class StructureManager {
 
     public void removeStructureListener(StructureListener listener) {
 	listeners.remove(listener);
+    }
+
+    public Structure checkForStone(Player player, Block behind) {
+	return blockListener.checkPlacedBlock(player, behind, null);
     }
 }

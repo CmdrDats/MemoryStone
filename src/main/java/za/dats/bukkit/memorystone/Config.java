@@ -11,6 +11,20 @@ public class Config {
     private final static String configFile = "configuration.yml";
     private static Configuration conf;
     
+    public enum MemoryEffect {
+	LIGHTNING_ON_CREATE("effects.lightningOnCreate"),
+	LIGHTNING_ON_BREAK("effects.lightningOnBreak"),
+	LIGHTNING_ON_TELEPORT_SOURCE("effects.lightningOnTeleportSource"),
+	LIGHTNING_ON_TELEPORT_DEST("effects.lightningOnTeleportDestination");
+	
+	private final String effectConf;
+
+	private MemoryEffect(String effectConf) {
+	    this.effectConf = effectConf;
+	}
+	
+    }
+    
     public static void init(JavaPlugin plugin) {
 	File file = new File(plugin.getDataFolder(), configFile);
 	conf = new Configuration(file);
@@ -31,16 +45,24 @@ public class Config {
 	
 	defaults.put("teleportItem", "COMPASS");
 	defaults.put("maxUsesPerItem", 50);
-	defaults.put("lightningEffect", true);
 	defaults.put("cooldownTime", 10);
 	defaults.put("fizzleCooldownTime", 5);
 	defaults.put("castingTime", 3);
 	defaults.put("sortByDistance", true);
 	defaults.put("minProximityToStoneForTeleport", 0);
 	
+	defaults.put("stonetostone.enabled", "true");
+	defaults.put("stonetostone.item", "GLOWDUST");
+	defaults.put("stonetostone.maxUses", 10);
+	
 	defaults.put("economy.enabled", true);
 	defaults.put("economy.ownerGetsPaid", true);
 	defaults.put("economy.addCustomValue", true);
+	
+	defaults.put("effects.lightningOnCreate", true);
+	defaults.put("effects.lightningOnBreak", true);
+	defaults.put("effects.lightningOnTeleportSource", true);
+	defaults.put("effects.lightningOnTeleportDestination", true);
 	
 	defaults.put("teleportKey", "C");
 	
@@ -54,13 +76,15 @@ public class Config {
 	defaults.put("lang.cooldown", "Teleport cooling down (<left>s)");
 	defaults.put("lang.startrecall", "Starting recall to <name>");
 	defaults.put("lang.cancelled", "Recall cancelled");
-	defaults.put("lang.chargesleft", "You have <numcharges> left");
-	defaults.put("lang.consumed", "You have worn your compass out!");
+	defaults.put("lang.chargesleft", "You have <numcharges> left on your <material>");
+	defaults.put("lang.consumed", "You have worn your <material> out!");
 	defaults.put("lang.teleportingother", "Teleporting <name> to <destination>");
 	defaults.put("lang.teleportedbyother", "<name> is teleporting you to <destination>");
 	defaults.put("lang.teleporting", "Teleporting to <destination>");
 	defaults.put("lang.noteleportzone", "You are in a no teleport zone. Cannot teleport out.");
-	defaults.put("lang.teleportitemnotfound", "You need to have a compass to teleport");
+	defaults.put("lang.teleportitemnotfound", "You need to have a <material> to teleport");
+	
+	defaults.put("lang.stonetostone.itemmissing", "You need some <material> to teleport from this memory stone");
 	
 	defaults.put("lang.nobuildpermission", "&EYou do not have permission to build memory stones.");
 	defaults.put("lang.nobreakpermission", "&EYou do not have permission to break memory stones.");
@@ -118,8 +142,8 @@ public class Config {
 	return conf.getInt("maxUsesPerItem", 0);
     }
     
-    public static boolean useLightning() {
-	return conf.getBoolean("lightningEffect", true);
+    public static boolean isEffectEnabled(MemoryEffect effect) {
+	return conf.getBoolean(effect.effectConf, true);
     }
     
     public static Material getTeleportItem() {
@@ -167,5 +191,24 @@ public class Config {
     
     public static String getTeleportKey() {
 	return conf.getString("teleportKey", "C");
+    }
+    
+    public static boolean isStoneToStoneEnabled() {
+	return conf.getBoolean("stonetostone.enabled", true);
+    }
+    
+    public static Material getStoneToStoneItem() {
+	String materialString = conf.getString("stonetostone.item");
+	try {
+	    Integer typeId = Integer.parseInt(materialString);
+	    return Material.getMaterial(typeId);
+	} catch (NumberFormatException e) {
+	}
+	
+	return Material.getMaterial(materialString);
+    }
+    
+    public static int getStoneToStoneMaxUses() {
+	return conf.getInt("stonetostone.maxUses", 10);
     }
 }

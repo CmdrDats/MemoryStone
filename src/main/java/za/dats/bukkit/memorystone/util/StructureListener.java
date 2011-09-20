@@ -3,6 +3,7 @@ package za.dats.bukkit.memorystone.util;
 import java.util.List;
 import java.util.Map;
 
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -23,14 +24,14 @@ public interface StructureListener {
      * 
      * @param structure
      */
-    public void structurePlaced(BlockPlaceEvent event, Structure structure);
+    public void structurePlaced(Player player, Structure structure);
     
     /**
      * A structure has been destroyed
      * 
      * @param structure
      */
-    public void structureDestroyed(BlockBreakEvent event, Structure structure);
+    public void structureDestroyed(Player player, Structure structure);
     
     /**
      * A structure was loaded from disk. Use the configuration node to load
