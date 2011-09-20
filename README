@@ -5,6 +5,10 @@ This plugin for minecraft Bukkit lets you create Memory Stone structures. You ca
 
 ChangeLog:
 ----------
+1.0.9
+	- Fixed small quirk where memorizing a stone would select that stone to teleport to instead of leaving it as it was before.
+	- Fixed a pretty show-stopping bug where the compass totally didn't work. Whoops.
+
 1.0.8
 	- Fixed up an NPE when only one location is memorized and you try teleport stone to stone from it
 	- Fixed a small bug if you use lava buckets in water to create your memory stones.

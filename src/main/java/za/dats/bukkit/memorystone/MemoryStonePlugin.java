@@ -42,7 +42,6 @@ public class MemoryStonePlugin extends JavaPlugin {
     
     public void onEnable() {
 	instance = this;
-	Utility.init(this);
 	Config.init(this);
 	
 	pm = getServer().getPluginManager();

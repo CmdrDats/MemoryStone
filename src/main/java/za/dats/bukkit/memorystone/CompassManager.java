@@ -265,7 +265,7 @@ public class CompassManager extends PlayerListener {
 		return true;
 	    }
 	    set.add(stone);
-	    selected.put(event.getPlayer().getName(), stone.getName());
+	    //selected.put(event.getPlayer().getName(), stone.getName());
 
 	    event.getPlayer().sendMessage(Config.getColorLang("memorize", "name", stone.getName()));
 
@@ -610,7 +610,7 @@ public class CompassManager extends PlayerListener {
 	    maxUses = Config.getMaxUsesPerItem();
 	    itemIndex = player.getInventory().getHeldItemSlot();
 
-	    if (Config.getTeleportItem() == null || !Config.getTeleportItem().equals(consumeItem)) {
+	    if (Config.getTeleportItem() == null || !Config.getTeleportItem().equals(consumeItem.getType())) {
 		return;
 	    }
 	} else if (Config.getStoneToStoneItem() != null) {
