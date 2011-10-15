@@ -42,7 +42,9 @@ public class Config {
     private static boolean setDefaults() {
 	HashMap<String, Object> defaults = new HashMap<String, Object>();
 	
-	
+	defaults.put("pointCompassOnly", false);
+	defaults.put("compassToUnmemorizedStoneDistance", 32);
+	defaults.put("ignoreStructure", false);
 	defaults.put("teleportItem", "COMPASS");
 	defaults.put("maxUsesPerItem", 50);
 	defaults.put("cooldownTime", 10);
@@ -104,6 +106,8 @@ public class Config {
 	defaults.put("lang.cantaffordbuild", "Cannot afford to build this structure at cost of : <cost>");
 	defaults.put("lang.cantaffordmemorize", "Cannot afford to memorize <name> at cost of : <cost>");
 	defaults.put("lang.cantaffordteleport", "Cannot afford to teleport to <name> with cost of : <cost>");
+	defaults.put("lang.compassinterference", "Something strange is happening with your compass");
+	defaults.put("lang.compasslostinterference", "Your compass returns to normal");
 	boolean changed = false;
 	for (String key : defaults.keySet()) {
 	    if (conf.getProperty(key) == null) {
@@ -210,5 +214,17 @@ public class Config {
     
     public static int getStoneToStoneMaxUses() {
 	return conf.getInt("stonetostone.maxUses", 10);
+    }
+
+    public static boolean isPointCompassOnly() {
+	return conf.getBoolean("pointCompassOnly", false);
+    }
+    
+    public static int getCompassToUnmemorizedStoneDistance() {
+	return conf.getInt("compassToUnmemorizedStoneDistance", 32);
+    }
+    
+    public static boolean isIgnoreStructure() {
+	return conf.getBoolean("ignoreStructure", true);
     }
 }

@@ -66,8 +66,8 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	if (stone.getType().equals(StoneType.NOTELEPORT)) {
 	    noTeleportStones.add(stone);
 	}
-	player.sendMessage(
-		Utility.color(Config.getColorLang("createConfirm", "name", structure.getStructureType().getName())));
+	player.sendMessage(Utility.color(Config.getColorLang("createConfirm", "name", structure.getStructureType()
+		.getName())));
     }
 
     public void structureDestroyed(Player player, Structure structure) {
@@ -335,7 +335,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	structuretype = new StructureType(proto);
 	types.add(structuretype);
     }
-
+    
     public MemoryStone getMemoryStoneAtBlock(Block behind) {
 	Set<Structure> structuresFromBlock = memoryStonePlugin.getStructureManager().getStructuresFromBlock(behind);
 	if (structuresFromBlock == null || structuresFromBlock.size() != 1) {
@@ -353,13 +353,27 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 
 	return null;
     }
-
+    
     public MemoryStone getMemoryStructureBehind(Sign sign) {
 	org.bukkit.material.Sign aSign = (org.bukkit.material.Sign) sign.getData();
 	Block behind = sign.getBlock().getRelative(aSign.getFacing().getOppositeFace());
 
 	MemoryStone stone = memoryStonePlugin.getMemoryStoneManager().getMemoryStoneAtBlock(behind);
 	return stone;
+    }
+
+    public MemoryStone getMemoryStructureForSign(Sign sign) {
+	for (MemoryStone stone : namedMap.values()) {
+	    if (stone.getSign() == null) {
+		continue; // Next to impossible.. anyway. moving along
+	    }
+
+	    if (sign.getBlock().equals(stone.getSign().getBlock())) {
+		return stone;
+	    }
+	}
+
+	return null;
     }
 
     public MemoryStone getNamedMemoryStone(String name) {
@@ -370,7 +384,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
     public void onBlockBreak(BlockBreakEvent event) {
 	if (event.getBlock().getState() instanceof Sign) {
 	    final Sign state = (Sign) event.getBlock().getState();
-	    final MemoryStone stone = getMemoryStructureBehind(state);
+	    final MemoryStone stone = getMemoryStructureForSign(state);
 	    if (stone != null) {
 		// check permissions!
 		if (!event.getPlayer().hasPermission("memorystone.break")) {
@@ -428,20 +442,22 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	}
 	memoryStonePlugin.info("Processing sign change event");
 
+	if (!(event.getBlock().getState() instanceof Sign)) {
+	    return;
+	}
 	final Sign state = (Sign) event.getBlock().getState();
 	MemoryStone stone = getMemoryStructureBehind(state);
 	if (stone == null) {
 	    // If stone isn't found, try initiate a 'create' on the block behind it.
 	    org.bukkit.material.Sign aSign = (org.bukkit.material.Sign) state.getData();
 	    Block behind = state.getBlock().getRelative(aSign.getFacing().getOppositeFace());
-	    
+
 	    Structure structure = memoryStonePlugin.getStructureManager().checkForStone(event.getPlayer(), behind);
 	    if (structure != null) {
 		stone = getMemoryStructureBehind(state);
-		
 	    }
 	}
-	
+
 	if (stone != null && stone.getType().equals(StoneType.MEMORYSTONE)) {
 	    // check permissions!
 	    if (!event.getPlayer().hasPermission("memorystone.build")) {
@@ -492,7 +508,7 @@ public class MemoryStoneManager extends BlockListener implements StructureListen
 	    if ("true".equals(stone.getStructure().getStructureType().getMetadata().get("global"))) {
 		globalStones.add(stone);
 	    }
-	    
+
 	    final MemoryStone finalStone = stone;
 	    memoryStonePlugin.getServer().getScheduler().scheduleSyncDelayedTask(memoryStonePlugin, new Runnable() {
 		public void run() {

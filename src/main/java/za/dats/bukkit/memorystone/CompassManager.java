@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,18 +53,20 @@ public class CompassManager extends PlayerListener {
 	Player teleportEntity;
     }
 
-    private final MemoryStonePlugin plugin;
+    final MemoryStonePlugin plugin;
     private final Map<String, Set<MemoryStone>> memorized;
     private final Map<String, String> selected;
     private final Map<String, Teleport> teleporting;
     private final String locationsFile = "locations.yml";
     private final List<Material> skippedInteractionBlocks;
+    private final Map<String, Interference> interferences;
 
     public CompassManager(MemoryStonePlugin plugin) {
 	this.plugin = plugin;
 	memorized = new HashMap<String, Set<MemoryStone>>();
 	selected = new HashMap<String, String>();
 	teleporting = new HashMap<String, Teleport>();
+	interferences = new HashMap<String, Interference>();
 
 	skippedInteractionBlocks = new ArrayList<Material>();
 	skippedInteractionBlocks.add(Material.BED_BLOCK);
@@ -211,7 +214,8 @@ public class CompassManager extends PlayerListener {
 
 			int index = p.getInventory().first(Config.getTeleportItem());
 			if (index == -1) {
-			    p.sendMessage(Config.getColorLang("teleportitemnotfound", "material", Config.getTeleportItem().toString().toLowerCase()));
+			    p.sendMessage(Config.getColorLang("teleportitemnotfound", "material", Config
+				    .getTeleportItem().toString().toLowerCase()));
 			    return;
 			}
 
@@ -229,7 +233,7 @@ public class CompassManager extends PlayerListener {
 
     public boolean memorizeStone(PlayerInteractEvent event) {
 	Sign state = (Sign) event.getClickedBlock().getState();
-	MemoryStone stone = plugin.getMemoryStoneManager().getMemoryStructureBehind(state);
+	MemoryStone stone = plugin.getMemoryStoneManager().getMemoryStructureForSign(state);
 
 	if (stone != null && stone.getSign() != null) {
 	    if (stone.isGlobal()) {
@@ -265,13 +269,26 @@ public class CompassManager extends PlayerListener {
 		return true;
 	    }
 	    set.add(stone);
-	    //selected.put(event.getPlayer().getName(), stone.getName());
+	    // selected.put(event.getPlayer().getName(), stone.getName());
 
 	    event.getPlayer().sendMessage(Config.getColorLang("memorize", "name", stone.getName()));
 
 	    saveLocations();
 	    return true;
 	}
+	return false;
+    }
+    
+    public boolean isMemorized(Player player, MemoryStone stone) {
+	Set<MemoryStone> set = memorized.get(player.getName());
+	if (set == null) {
+	    return false;
+	}
+	
+	if (set.contains(stone)) {
+	    return true;
+	}
+	
 	return false;
     }
 
@@ -430,7 +447,8 @@ public class CompassManager extends PlayerListener {
 		}
 		caster.sendMessage(Config.getColorLang("consumed", "material", item.getType().toString().toLowerCase()));
 	    } else {
-		caster.sendMessage(Config.getColorLang("chargesleft", "numcharges", "" + item.getDurability(), "material", item.getType().toString().toLowerCase()));
+		caster.sendMessage(Config.getColorLang("chargesleft", "numcharges", "" + item.getDurability(),
+			"material", item.getType().toString().toLowerCase()));
 	    }
 	}
 
@@ -470,7 +488,11 @@ public class CompassManager extends PlayerListener {
 		    teleport.teleportEntity.getWorld().strikeLightningEffect(destination);
 		}
 
-		teleport.teleportEntity.teleport(destination);
+		if (Config.isPointCompassOnly()) {
+		    teleport.teleportEntity.setCompassTarget(destination);
+		} else {
+		    teleport.teleportEntity.teleport(destination);
+		}
 
 	    }
 	}, waitTime);
@@ -599,7 +621,7 @@ public class CompassManager extends PlayerListener {
 	if (Config.isStoneToStoneEnabled() && player.hasPermission("memorystone.usestonetostone")
 		&& (clickedBlock != null) && (clickedBlock.getState() instanceof Sign)) {
 	    Sign state = (Sign) clickedBlock.getState();
-	    clickedStone = plugin.getMemoryStoneManager().getMemoryStructureBehind(state);
+	    clickedStone = plugin.getMemoryStoneManager().getMemoryStructureForSign(state);
 	}
 
 	ItemStack consumeItem = null;
@@ -621,7 +643,8 @@ public class CompassManager extends PlayerListener {
 	    }
 
 	    if (consumeItem == null) {
-		player.sendMessage(Config.getColorLang("stonetostone.itemmissing", "material", Config.getStoneToStoneItem().toString().toLowerCase()));
+		player.sendMessage(Config.getColorLang("stonetostone.itemmissing", "material", Config
+			.getStoneToStoneItem().toString().toLowerCase()));
 		return;
 	    }
 	}
@@ -644,7 +667,7 @@ public class CompassManager extends PlayerListener {
 		if (playerLocations != null && ignoreStone != null) {
 		    playerLocations.remove(ignoreStone);
 		}
-		
+
 		if (playerLocations == null || playerLocations.size() == 0) {
 		    player.sendMessage(Config.getColorLang("notmemorized"));
 		    return;
@@ -738,7 +761,7 @@ public class CompassManager extends PlayerListener {
 		    && (event.getClickedBlock().getState() instanceof Sign)
 		    && player.hasPermission("memorystone.usestonetostone")) {
 		Sign state = (Sign) event.getClickedBlock().getState();
-		clickedStone = plugin.getMemoryStoneManager().getMemoryStructureBehind(state);
+		clickedStone = plugin.getMemoryStoneManager().getMemoryStructureForSign(state);
 		if (clickedStone == null) {
 		    return;
 		}
@@ -849,6 +872,21 @@ public class CompassManager extends PlayerListener {
 
 		cancelTeleport(event.getPlayer());
 	    }
+	}
+
+	if (Config.getCompassToUnmemorizedStoneDistance() == 0) {
+	    return;
+	}
+
+	Player player = event.getPlayer();
+	Interference interference = interferences.get(player.getName());
+	if (interference == null) {
+	    interference = new Interference();
+	    interferences.put(player.getName(), interference);
+	}
+
+	if (!interference.isTooClose(event.getTo())) {
+	    interference.update(player, event);
 	}
     }
 
