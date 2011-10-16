@@ -50,7 +50,7 @@ public class Interference {
 	    }
 
 	    double currentDistance = event.getTo().distanceSquared(stone.getSign().getBlock().getLocation());
-	    if (player.getLocation().distanceSquared(stone.getSign().getBlock().getLocation()) < distance) {
+	    if (currentDistance < distance) {
 		if ((closestStone == null) || (closestDistance > currentDistance)) {
 		    closestStone = stone;
 		    closestDistance = currentDistance;
