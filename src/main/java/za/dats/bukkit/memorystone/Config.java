@@ -52,6 +52,7 @@ public class Config {
 	defaults.put("castingTime", 3);
 	defaults.put("sortByDistance", true);
 	defaults.put("minProximityToStoneForTeleport", 0);
+	defaults.put("automaticMemorizationDistance", 0);
 	
 	defaults.put("stonetostone.enabled", "true");
 	defaults.put("stonetostone.item", "GLOWDUST");
@@ -102,6 +103,8 @@ public class Config {
 	defaults.put("lang.duplicate", "&C[Duplicate]");
 	
 	defaults.put("lang.outsideproximity", "You are not close enough to a memory stone to teleport.");
+	defaults.put("lang.insidememorizationdistance", "As you approach <name> you take note of its location.");
+	defaults.put("lang.insidememorizationdistancenotfree", "You notice that <name> has a memorization cost of  : <cost>");
 	
 	defaults.put("lang.cantaffordbuild", "Cannot afford to build this structure at cost of : <cost>");
 	defaults.put("lang.cantaffordmemorize", "Cannot afford to memorize <name> at cost of : <cost>");
@@ -192,6 +195,10 @@ public class Config {
     public static int getMinProximityToStoneForTeleport() {
 	return conf.getInt("minProximityToStoneForTeleport", 0);
     }
+    
+    public static int getAutomaticMemorizationDistanceSquared() {
+    	return conf.getInt("automaticMemorizationDistance", 0)^2;
+        }
     
     public static String getTeleportKey() {
 	return conf.getString("teleportKey", "C");

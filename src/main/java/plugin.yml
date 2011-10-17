@@ -1,0 +1,80 @@
+name: MemoryStone
+main: za.dats.bukkit.memorystone.MemoryStonePlugin
+version: 1.1.0
+website: http://www.dats.co.za
+author: CmdrDats
+description: >
+             Build Memory Stones out of Stone and Obsidian and a Sign to name it
+             Tap a Memory Stone with your compass to memorize its location
+             Right click with a compass to select a memorized stone to teleport to
+softdepend: [Spout, iConomy, BOSEconomy, MultiCurrency] 
+permissions:
+  memorystone.*:
+    description: gives access to all normal MemoryStone permissions
+    children:
+      memorystone.build: true
+      memorystone.break: true
+      memorystone.use: true
+      memorystone.useonothers: true
+  memorystone.op:
+    description: gives access to instant, free, cooldownless casting
+    children:
+      memorystone.usefree: true
+      memorystone.usewithoutcooldown: true
+      memorystone.useinstantly: true
+      memorystone.useanywhere: true
+  memorystone.build:
+    description: allows user to build Memory Stones
+    default: true
+  memorystone.break:
+    description: allows user to break Memory Stones
+    default: true
+  memorystone.use:
+    description: allows user to teleport
+    default: true
+  memorystone.usestonetostone:
+    description: allows user to use stone to stone teleportation
+    default: true
+  memorystone.useonothers:
+    description: allows user to teleport others
+    default: true
+  memorystone.usefree:
+    description: allows user to teleport without costing charges (if applicable)
+    default: false
+  memorystone.usewithoutcooldown:
+    description: allows user to teleport without cooldowns
+    default: false
+  memorystone.useinstantly:
+    description: allows user to teleport without casting time
+    default: false
+  memorystone.allmemorized:
+    description: allows user to teleport to any stone without first memorizing it.
+    default: false
+  memorystone.useanywhere:
+    description: allows user to teleport without being in proximity of another stone
+    default: false
+    
+  memorystone.create.*:
+    description: Gives access to all the stone types
+    children:
+      memorystone.create.local: true
+      memorystone.create.global: true
+      memorystone.create.crossworld: true
+      memorystone.create.crossworldglobal: true
+      memorystone.create.noteleport: true
+  memorystone.create.local:
+    description: Create local memory stones
+    default: true
+  memorystone.create.global:
+    description: Create global memory stones
+    default: true
+  memorystone.create.crossworld:
+    description: Create crossworld memory stones
+    default: true
+  memorystone.create.crossworldglobal:
+    description: Create crossworld global memory stones
+    default: true
+  memorystone.create.noteleport:
+    description: Create noteleport zone stones.
+    default: true
+
