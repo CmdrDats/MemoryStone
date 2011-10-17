@@ -198,7 +198,9 @@ public class Config {
     }
     
     public static int getAutomaticMemorizationDistanceSquared() {
-    	return conf.getInt("automaticMemorizationDistance", 0)^2;
+    	int temp = conf.getInt("automaticMemorizationDistance", 0);
+    	temp = temp*temp;
+    	return temp;
         }
     
     public static String getTeleportKey() {

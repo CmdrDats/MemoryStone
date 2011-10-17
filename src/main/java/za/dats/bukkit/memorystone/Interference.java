@@ -64,10 +64,10 @@ public class Interference {
 
 	if (closestMemStone != null) {
 		//has stone been memorized?
-		if (MemoryStonePlugin.getInstance().getCompassManager().isMemorized(player, stone)) {
+		if (!MemoryStonePlugin.getInstance().getCompassManager().isMemorized(player, closestMemStone)) {
 			
 			//check to see if the stone is free
-			if (closestMemStone.getMemorizeCost()==0){
+			if (closestMemStone.getMemorizeCost()==0||player.hasPermission("memorystone.usefree")){
 				//if stone is free memorize the stone and give the player a message
 				player.sendMessage(Config.getColorLang("insidememorizationdistance"));
 				MemoryStonePlugin.getInstance().getCompassManager().memorizeStone(player, closestMemStone);
