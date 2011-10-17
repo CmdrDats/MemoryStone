@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>za.dats.bukkit</groupId>
 	<artifactId>memory-stone</artifactId>
-	<version>1.0.9</version>
+	<version>1.1.1</version>
 	<name>MemoryStone</name>
 	<url>http://www.dats.co.za/memoryStone</url>
 	<build>
@@ -20,7 +20,50 @@
 			</plugin>
 		</plugins>
 	</build>
-	<!-- For the most part, I'm administering my own Artifactory where I'm manually deploying these, so they might be incorrect -->
+
+	<repositories>
+		<repository>
+			<id>blockface-repo</id>
+			<url>http://repo.blockface.org/repository/</url>
+			<releases>
+				<updatePolicy>daily</updatePolicy>
+			</releases>
+			<snapshots>
+				<updatePolicy>daily</updatePolicy>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>craftfire-repo</id>
+			<url>http://repo.craftfire.com</url>
+			<releases>
+				<updatePolicy>daily</updatePolicy>
+			</releases>
+			<snapshots>
+				<updatePolicy>daily</updatePolicy>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>spout-repo</id>
+			<url>http://repo.getspout.org</url>
+			<releases>
+				<updatePolicy>daily</updatePolicy>
+			</releases>
+			<snapshots>
+				<updatePolicy>daily</updatePolicy>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>craftfire-dbrepo</id>
+			<url>http://db.craftfire.com/repo</url>
+		</repository>
+		<repository>
+			<id>sk89q-repo</id>
+			<url>http://mvn2.sk89q.com/repo</url>
+		</repository>
+	</repositories>
+
+	<!-- For the most part, I'm administering my own Artifactory where I'm manually 
+		deploying these, so they might be incorrect -->
 	<dependencies>
 		<dependency>
 			<groupId>org.bukkit</groupId>
@@ -37,45 +80,34 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.iconomy</groupId>
+			<groupId>com.nijiko</groupId>
 			<artifactId>iCo6</artifactId>
-			<version>6.0.0</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>		<dependency>
-			<groupId>com.iconomy</groupId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.nijiko</groupId>
 			<artifactId>iCo5</artifactId>
-			<version>5.0.0</version>
-			<type>jar</type>
-			<scope>compile</scope>
+			<version>1.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.iconomy</groupId>
+			<groupId>com.nijiko</groupId>
 			<artifactId>iCo4</artifactId>
-			<version>4.0.0</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>		
-		<dependency>
-			<groupId>com.boseconomy</groupId>
-			<artifactId>BOSEconomy</artifactId>
-			<version>0.7.2</version>
-			<type>jar</type>
-			<scope>compile</scope>
+			<version>1.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.essentials</groupId>
+			<groupId>cosine.boseconomy</groupId>
+			<artifactId>BOSEconomy7</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.earth2me</groupId>
 			<artifactId>Essentials</artifactId>
-			<version>2.5.8</version>
-			<type>jar</type>
-			<scope>compile</scope>
+			<version>1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>me.ashtheking</groupId>
 			<artifactId>MultiCurrency</artifactId>
-			<version>1.0.0</version>
-			<type>jar</type>
-			<scope>compile</scope>
+			<version>1.0</version>
 		</dependency>
 
 		<!-- temporary dependency to get eclipse off my back. -->

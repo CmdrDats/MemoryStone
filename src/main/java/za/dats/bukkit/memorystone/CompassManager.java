@@ -234,50 +234,55 @@ public class CompassManager extends PlayerListener {
     public boolean memorizeStone(PlayerInteractEvent event) {
 	Sign state = (Sign) event.getClickedBlock().getState();
 	MemoryStone stone = plugin.getMemoryStoneManager().getMemoryStructureForSign(state);
-
-	if (stone != null && stone.getSign() != null) {
-	    if (stone.isGlobal()) {
-		if (Config.isStoneToStoneEnabled()) {
-		    return false;
-		}
-
-		event.getPlayer().sendMessage(Config.getColorLang("alreadymemorized", "name", stone.getName()));
-		return true;
-	    }
-
-	    EconomyManager economyManager = MemoryStonePlugin.getInstance().getEconomyManager();
-	    if (economyManager.isEconomyEnabled() && (!event.getPlayer().hasPermission("memorystone.usefree"))
-		    && !economyManager.payMemorizeCost(event.getPlayer(), stone)) {
-		event.getPlayer().sendMessage(
-			Config.getColorLang("cantaffordmemorize", "name", stone.getName(), "cost",
-				economyManager.getFormattedCost(stone.getMemorizeCost())));
-		return true;
-	    }
-
-	    Set<MemoryStone> set = memorized.get(event.getPlayer().getName());
-	    if (set == null) {
-		set = new TreeSet<MemoryStone>();
-		memorized.put(event.getPlayer().getName(), set);
-	    }
-
-	    if (set.contains(stone)) {
-		if (Config.isStoneToStoneEnabled()) {
-		    return false;
-		}
-
-		event.getPlayer().sendMessage(Config.getColorLang("alreadymemorized", "name", stone.getName()));
-		return true;
-	    }
-	    set.add(stone);
-	    // selected.put(event.getPlayer().getName(), stone.getName());
-
-	    event.getPlayer().sendMessage(Config.getColorLang("memorize", "name", stone.getName()));
-
-	    saveLocations();
-	    return true;
-	}
-	return false;
+	return memorizeStone(event.getPlayer(), stone);
     }
+    
+    public boolean memorizeStone(Player player, MemoryStone stone) {
+    	
+    	if (player!=null && stone != null && stone.getSign() != null) {
+    	    if (stone.isGlobal()) {
+    		if (Config.isStoneToStoneEnabled()) {
+    		    return false;
+    		}
+
+    		player.sendMessage(Config.getColorLang("alreadymemorized", "name", stone.getName()));
+    		return true;
+    	    }
+
+    	    EconomyManager economyManager = MemoryStonePlugin.getInstance().getEconomyManager();
+    	    if (economyManager.isEconomyEnabled() && (!player.hasPermission("memorystone.usefree"))
+    		    && !economyManager.payMemorizeCost(player, stone)) {
+    	    player.sendMessage(
+    			Config.getColorLang("cantaffordmemorize", "name", stone.getName(), "cost",
+    				economyManager.getFormattedCost(stone.getMemorizeCost())));
+    		return true;
+    	    }
+
+    	    Set<MemoryStone> set = memorized.get(player.getName());
+    	    if (set == null) {
+    		set = new TreeSet<MemoryStone>();
+    		memorized.put(player.getName(), set);
+    	    }
+
+    	    if (set.contains(stone)) {
+    		if (Config.isStoneToStoneEnabled()) {
+    		    return false;
+    		}
+
+    		player.sendMessage(Config.getColorLang("alreadymemorized", "name", stone.getName()));
+    		return true;
+    	    }
+    	    set.add(stone);
+    	    // selected.put(player.getName(), stone.getName());
+
+    	    player.sendMessage(Config.getColorLang("memorize", "name", stone.getName()));
+
+    	    saveLocations();
+    	    return true;
+    	}
+    	return false;
+        }
+
     
     public boolean isMemorized(Player player, MemoryStone stone) {
 	Set<MemoryStone> set = memorized.get(player.getName());
@@ -874,7 +879,7 @@ public class CompassManager extends PlayerListener {
 	    }
 	}
 
-	if (Config.getCompassToUnmemorizedStoneDistance() == 0) {
+	if (Config.getCompassToUnmemorizedStoneDistanceSquared() == 0) {
 	    return;
 	}
 
