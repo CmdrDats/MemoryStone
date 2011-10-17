@@ -104,7 +104,8 @@ public class Config {
 	
 	defaults.put("lang.outsideproximity", "You are not close enough to a memory stone to teleport.");
 	defaults.put("lang.insidememorizationdistance", "As you approach <name> you take note of its location.");
-	defaults.put("lang.insidememorizationdistancenotfree", "You notice that <name> has a memorization cost of  : <cost>");
+	//not used yet. needs thinking about how to use this message without spamming
+	//defaults.put("lang.insidememorizationdistancenotfree", "You notice that <name> has a memorization cost of  : <cost>"); 
 	
 	defaults.put("lang.cantaffordbuild", "Cannot afford to build this structure at cost of : <cost>");
 	defaults.put("lang.cantaffordmemorize", "Cannot afford to memorize <name> at cost of : <cost>");

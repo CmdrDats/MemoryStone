@@ -48,18 +48,18 @@ public class Interference {
 	    }
 
 	    double currentDistance = lastPosition.distanceSquared(stone.getSign().getBlock().getLocation());
-	    if (player.getLocation().distanceSquared(stone.getSign().getBlock().getLocation()) < interferencerange) {
+	    if (currentDistance < interferencerange) {
 		if ((closestStone == null) || (closestDistance > currentDistance)) {
 		    closestStone = stone;
 		    closestDistance = currentDistance;
 		}
 	    }
-	    if (player.getLocation().distanceSquared(stone.getSign().getBlock().getLocation()) < memorizationrange) {
-			if ((closestMemStone == null) || (closestMemDistance > currentDistance)) {
-			    closestMemStone = stone;
-			    closestMemDistance = currentDistance;
-			}
-		    }
+	    if (currentDistance < memorizationrange) {
+		if ((closestMemStone == null) || (closestMemDistance > currentDistance)) {
+		    closestMemStone = stone;
+		    closestMemDistance = currentDistance;
+		}
+		}
 	}
 
 	if (closestMemStone != null) {

@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>za.dats.bukkit</groupId>
 	<artifactId>memory-stone</artifactId>
-	<version>1.0.10</version>
+	<version>1.1.1</version>
 	<name>MemoryStone</name>
 	<url>http://www.dats.co.za/memoryStone</url>
 	<build>
