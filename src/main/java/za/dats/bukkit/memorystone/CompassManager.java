@@ -879,7 +879,7 @@ public class CompassManager extends PlayerListener {
 	    }
 	}
 
-	if (Config.getCompassToUnmemorizedStoneDistance() == 0) {
+	if (Config.getCompassToUnmemorizedStoneDistanceSquared() == 0) {
 	    return;
 	}
 

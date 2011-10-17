@@ -27,8 +27,7 @@ public class Interference {
 	lastPosition = event.getTo();
 
 	int memorizationrange = Config.getAutomaticMemorizationDistanceSquared();
-	int interferencerange = Config.getCompassToUnmemorizedStoneDistance();
-	interferencerange = interferencerange * interferencerange; // Just to make things slightly quicker
+	int interferencerange = Config.getCompassToUnmemorizedStoneDistanceSquared();
 
 	MemoryStone closestStone = null;
 	MemoryStone closestMemStone = null;
@@ -59,29 +58,29 @@ public class Interference {
 		    closestMemStone = stone;
 		    closestMemDistance = currentDistance;
 		}
-		}
+	    }
 	}
 
 	if (closestMemStone != null) {
-		//has stone been memorized?
-		if (!MemoryStonePlugin.getInstance().getCompassManager().isMemorized(player, closestMemStone)) {
-			
-			//check to see if the stone is free
-			if (closestMemStone.getMemorizeCost()==0||player.hasPermission("memorystone.usefree")){
-				//if stone is free memorize the stone and give the player a message
-				player.sendMessage(Config.getColorLang("insidememorizationdistance"));
-				MemoryStonePlugin.getInstance().getCompassManager().memorizeStone(player, closestMemStone);
-			}		
+	    // has stone been memorized?
+	    if (!MemoryStonePlugin.getInstance().getCompassManager().isMemorized(player, closestMemStone)) {
+
+		// check to see if the stone is free
+		if (closestMemStone.getMemorizeCost() == 0 || player.hasPermission("memorystone.usefree")) {
+		    // if stone is free memorize the stone and give the player a message
+		    player.sendMessage(Config.getColorLang("insidememorizationdistance"));
+		    MemoryStonePlugin.getInstance().getCompassManager().memorizeStone(player, closestMemStone);
 		}
+	    }
 	}
-		
+
 	// Check that the player actually has a compass..
 	int index = player.getInventory().first(Material.COMPASS);
 	if (index == -1) {
 	    // No compass.. nothing to see here, move on.
 	    return;
 	}
-	
+
 	// Point compass
 	if (closestStone != null) {
 

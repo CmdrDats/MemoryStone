@@ -20,49 +20,50 @@
 			</plugin>
 		</plugins>
 	</build>
-	
-	    <repositories>
-	    <repository>
-            <id>blockface-repo</id>
-            <url>http://repo.blockface.org/repository/</url>
-            <releases>
-                <updatePolicy>daily</updatePolicy>
-            </releases>
-            <snapshots>
-                <updatePolicy>daily</updatePolicy>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>craftfire-repo</id>
-            <url>http://repo.craftfire.com</url>
-            <releases>
-                <updatePolicy>daily</updatePolicy>
-            </releases>
-            <snapshots>
-                <updatePolicy>daily</updatePolicy>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>spout-repo</id>
-            <url>http://repo.getspout.org</url>
-            <releases>
-                <updatePolicy>daily</updatePolicy>
-            </releases>
-            <snapshots>
-                <updatePolicy>daily</updatePolicy>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>craftfire-dbrepo</id>
-            <url>http://db.craftfire.com/repo</url>
-        </repository>
-        <repository>
-            <id>sk89q-repo</id>
-            <url>http://mvn2.sk89q.com/repo</url>
-        </repository>
-    </repositories>
-	
-	<!-- For the most part, I'm administering my own Artifactory where I'm manually deploying these, so they might be incorrect -->
+
+	<repositories>
+		<repository>
+			<id>blockface-repo</id>
+			<url>http://repo.blockface.org/repository/</url>
+			<releases>
+				<updatePolicy>daily</updatePolicy>
+			</releases>
+			<snapshots>
+				<updatePolicy>daily</updatePolicy>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>craftfire-repo</id>
+			<url>http://repo.craftfire.com</url>
+			<releases>
+				<updatePolicy>daily</updatePolicy>
+			</releases>
+			<snapshots>
+				<updatePolicy>daily</updatePolicy>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>spout-repo</id>
+			<url>http://repo.getspout.org</url>
+			<releases>
+				<updatePolicy>daily</updatePolicy>
+			</releases>
+			<snapshots>
+				<updatePolicy>daily</updatePolicy>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>craftfire-dbrepo</id>
+			<url>http://db.craftfire.com/repo</url>
+		</repository>
+		<repository>
+			<id>sk89q-repo</id>
+			<url>http://mvn2.sk89q.com/repo</url>
+		</repository>
+	</repositories>
+
+	<!-- For the most part, I'm administering my own Artifactory where I'm manually 
+		deploying these, so they might be incorrect -->
 	<dependencies>
 		<dependency>
 			<groupId>org.bukkit</groupId>
@@ -82,7 +83,8 @@
 			<groupId>com.nijiko</groupId>
 			<artifactId>iCo6</artifactId>
 			<version>1.0</version>
-		</dependency>		<dependency>
+		</dependency>
+		<dependency>
 			<groupId>com.nijiko</groupId>
 			<artifactId>iCo5</artifactId>
 			<version>1.0</version>
@@ -91,7 +93,7 @@
 			<groupId>com.nijiko</groupId>
 			<artifactId>iCo4</artifactId>
 			<version>1.0</version>
-		</dependency>		
+		</dependency>
 		<dependency>
 			<groupId>cosine.boseconomy</groupId>
 			<artifactId>BOSEconomy7</artifactId>

@@ -5,6 +5,12 @@ This plugin for minecraft Bukkit lets you create Memory Stone structures. You ca
 
 ChangeLog:
 ----------
+1.1.2
+	- @ryantheleach added auto-memorization support
+	
+1.1.1
+	- Fixed an exception comparing locations in different worlds.
+	
 1.1.0
 	- Interaction with other sign based plugins sometimes throws NPE's onSignChange event.
 	- pointCompassOnly config option if you don't want teleportation, but just set compass to destination.
