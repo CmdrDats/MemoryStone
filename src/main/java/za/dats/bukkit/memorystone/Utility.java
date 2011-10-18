@@ -1,8 +1,6 @@
 package za.dats.bukkit.memorystone;
 
 import java.util.regex.Pattern;
-import org.bukkit.entity.Player;
-import org.bukkit.util.config.Configuration;
 
 /**
  *
