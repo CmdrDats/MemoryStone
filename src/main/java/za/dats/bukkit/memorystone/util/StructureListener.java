@@ -4,9 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.util.config.ConfigurationNode;
 
 import za.dats.bukkit.memorystone.util.structure.Structure;
