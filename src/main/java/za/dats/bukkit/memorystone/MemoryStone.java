@@ -145,6 +145,7 @@ public class MemoryStone implements Comparable<MemoryStone> {
     }
 
     public double getMemorizeCost() {
+    	if(!Config.isEconomyEnabled()) return 0;
 	String baseCostString = structure.getStructureType().getMetadata().get("memorizecost");
 	if (baseCostString != null) {
 	    try {
