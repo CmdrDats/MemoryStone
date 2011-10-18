@@ -1,12 +1,7 @@
 package za.dats.bukkit.memorystone.economy;
 
 import java.util.Map;
-import java.util.logging.Level;
-
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginDescriptionFile;
-
 import za.dats.bukkit.memorystone.Config;
 import za.dats.bukkit.memorystone.MemoryStone;
 import za.dats.bukkit.memorystone.MemoryStonePlugin;

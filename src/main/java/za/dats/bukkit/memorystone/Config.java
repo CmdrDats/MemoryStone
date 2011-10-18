@@ -54,7 +54,7 @@ public class Config {
 	defaults.put("automaticMemorizationDistance", 0);
 
 	defaults.put("stonetostone.enabled", "true");
-	defaults.put("stonetostone.item", "GLOWDUST");
+	defaults.put("stonetostone.item", "glowstone_dust");
 	defaults.put("stonetostone.maxUses", 10);
 
 	defaults.put("economy.enabled", true);
