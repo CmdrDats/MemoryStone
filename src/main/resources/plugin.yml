@@ -1,26 +1,29 @@
 name: MemoryStone
 main: za.dats.bukkit.memorystone.MemoryStonePlugin
-version: 1.1.1
+version: 2.0.0
+api-version: "1.15"
 website: http://www.dats.co.za
 author: CmdrDats
 description: >
              Build Memory Stones out of Stone and Obsidian and a Sign to name it
              Tap a Memory Stone with your compass to memorize its location
              Right click with a compass to select a memorized stone to teleport to
-softdepend: [Spout, iConomy, BOSEconomy, MultiCurrency] 
 permissions:
   memorystone.*:
     description: gives access to all normal MemoryStone permissions
     children:
       memorystone.build: true
-      memorystone.break: true
       memorystone.use: true
       memorystone.useonothers: true
-  memorystone.op:
-    description: gives access to instant, free, cooldownless casting
+  memorystone.admin:
+    description: gives access to breaking
     children:
-      memorystone.usefree: true
+      memorystone.break: true
+  memorystone.op:
+    description: gives access to instant, cooldownless casting
+    children:
       memorystone.usewithoutcooldown: true
+      memorystone.break: true
       memorystone.useinstantly: true
       memorystone.useanywhere: true
   memorystone.build:
@@ -38,9 +41,6 @@ permissions:
   memorystone.useonothers:
     description: allows user to teleport others
     default: true
-  memorystone.usefree:
-    description: allows user to teleport without costing charges (if applicable)
-    default: false
   memorystone.usewithoutcooldown:
     description: allows user to teleport without cooldowns
     default: false
