@@ -159,25 +159,29 @@ public class StructureManager {
 
     // ---------- Structure type loading/saving ------------------
     public void loadStructureTypesOrDefault() {
-
         File structureTypesFile = new File(this.plugin.getDataFolder(), this.structureTypes_filename);
-        if (!structureTypesFile.isFile()) {
-            try {
-                structureTypesFile.getParentFile().mkdirs();
-                structureTypesFile.createNewFile();
-                this.saveDefaultStructureTypes();
-            } catch (Exception ex) {
-                log.warning(logPrefix + "could not create file " + structureTypesFile.getName());
-            }
+        if (structureTypesFile.isFile()) {
+            this.loadStructureTypes();
+            return;
         }
 
-        this.loadStructureTypes();
+        try {
+            if (!structureTypesFile.createNewFile()) {
+                log.warning(logPrefix + "could not create empty file " + structureTypesFile.getName());
+                return;
+            }
+
+            this.saveDefaultStructureTypes();
+            this.loadStructureTypes();
+        } catch (Exception ex) {
+            log.warning(logPrefix + "could not write file " + structureTypesFile.getName());
+        }
     }
 
     private void loadStructureTypes() {
 
         File structureTypesFile = new File(this.plugin.getDataFolder(), this.structureTypes_filename);
-        YamlConfiguration conf =  YamlConfiguration.loadConfiguration(structureTypesFile);
+        YamlConfiguration conf = YamlConfiguration.loadConfiguration(structureTypesFile);
 
         List<?> nodelist = conf.getList("structuretypes", new ArrayList<ConfigurationSection>());
         if (nodelist == null) {
@@ -186,7 +190,7 @@ public class StructureManager {
         }
 
         for (Object node : nodelist) {
-            StructureType structureType = this.yaml2StructureType((Map<?,?>)node);
+            StructureType structureType = this.yaml2StructureType((Map<?, ?>) node);
             if (structureType == null) {
                 log.warning(logPrefix + "a structure type couldn't be loaded");
             } else {
@@ -254,16 +258,16 @@ public class StructureManager {
         return yamllist;
     }
 
-    private StructureType yaml2StructureType(Map<?,?> node) {
+    private StructureType yaml2StructureType(Map<?, ?> node) {
         StructureType.Prototype prototype = new StructureType.Prototype();
-        String name = (String)node.get("name");
+        String name = (String) node.get("name");
         if (name == null) {
             log.warning(logPrefix + "Structure type's name is not set");
             return null;
         }
         prototype.setName(name);
 
-        String rotatorstr = (String)node.get("rotator");
+        String rotatorstr = (String) node.get("rotator");
         if (rotatorstr == null) {
             log.warning(logPrefix + "Structure type's rotator is not set");
             rotatorstr = ":(";
@@ -276,20 +280,20 @@ public class StructureManager {
         }
         prototype.setRotator(rotator);
 
-        List<?> structuretypenodes = (List<?>)node.get("structure");
+        List<?> structuretypenodes = (List<?>) node.get("structure");
         if (structuretypenodes == null || structuretypenodes.isEmpty()) {
             log.warning(logPrefix + "Structure type's structure is not set");
             return null;
         }
 
         for (Object sn : structuretypenodes) {
-            Map<?,?> structureNode = (Map<?,?>) sn;
+            Map<?, ?> structureNode = (Map<?, ?>) sn;
 
-            int x = (Integer)structureNode.get("x");
-            int y = (Integer)structureNode.get("y");
-            int z = (Integer)structureNode.get("z");
+            int x = (Integer) structureNode.get("x");
+            int y = (Integer) structureNode.get("y");
+            int z = (Integer) structureNode.get("z");
 
-            String materialstr = (String)structureNode.get("material");
+            String materialstr = (String) structureNode.get("material");
             if (materialstr == null) {
                 log.warning(logPrefix + "Structure's material is not set");
                 continue;
@@ -323,13 +327,13 @@ public class StructureManager {
         List<?> nodelist = conf.getList("structures", new ArrayList<ConfigurationSection>());
 
         for (Object node : nodelist) {
-            Structure structure = this.yaml2Structure((Map<?,?>)node);
+            Structure structure = this.yaml2Structure((Map<?, ?>) node);
 
             if (structure == null) {
                 log.warning(logPrefix + "A structure couldn't be loaded");
             } else {
                 for (StructureListener listener : listeners) {
-                    listener.structureLoaded(structure, (Map<String, Object>)node);
+                    listener.structureLoaded(structure, (Map<String, Object>) node);
                 }
 
                 this.addStructure(null, structure);
@@ -342,7 +346,7 @@ public class StructureManager {
     public void saveStructures() {
 
         File structuresfile = new File(this.plugin.getDataFolder(), this.structures_filename);
-        YamlConfiguration conf =  YamlConfiguration.loadConfiguration(structuresfile);
+        YamlConfiguration conf = YamlConfiguration.loadConfiguration(structuresfile);
 
         List<Object> yamllist = new ArrayList<Object>();
 
@@ -382,27 +386,29 @@ public class StructureManager {
         return yamlmap;
     }
 
-    private Structure yaml2Structure(Map<?,?> node) {
+    private Structure yaml2Structure(Map<?, ?> node) {
         String name = (String) node.get("name");
-        if (name == null) { name = "structure"; }
-        String worldstr = (String)node.get("world");
+        if (name == null) {
+            name = "structure";
+        }
+        String worldstr = (String) node.get("world");
 
         if (worldstr == null) {
             log.warning(logPrefix + name + ": world is not set");
             return null;
         }
 
-        int x = (Integer)node.get("x");
-        int y = (Integer)node.get("y");
-        int z = (Integer)node.get("z");
+        int x = (Integer) node.get("x");
+        int y = (Integer) node.get("y");
+        int z = (Integer) node.get("z");
 
-        String structureTypeStr = (String)node.get("type");
+        String structureTypeStr = (String) node.get("type");
         if (structureTypeStr == null) {
             log.warning(logPrefix + name + ": type is not set");
             return null;
         }
 
-        String owner = (String)node.get("owner");
+        String owner = (String) node.get("owner");
         if (owner == null) {
             // log.warning("totem's owner is not set");
             // do nothing

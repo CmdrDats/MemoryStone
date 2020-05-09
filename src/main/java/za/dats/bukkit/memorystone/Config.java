@@ -45,20 +45,16 @@ public class Config {
         HashMap<String, Object> defaults = new HashMap<String, Object>();
 
         defaults.put("pointCompassOnly", false);
-        defaults.put("compassToUnmemorizedStoneDistance", 32);
-        defaults.put("ignoreStructure", false);
+        defaults.put("compassToUnmemorizedStoneDistance", 128);
         defaults.put("teleportItem", "COMPASS");
-        defaults.put("maxUsesPerItem", 50);
+        defaults.put("reagentItem", "REDSTONE");
         defaults.put("cooldownTime", 10);
         defaults.put("fizzleCooldownTime", 5);
         defaults.put("castingTime", 3);
         defaults.put("sortByDistance", true);
-        defaults.put("minProximityToStoneForTeleport", 0);
-        defaults.put("automaticMemorizationDistance", 0);
 
-        defaults.put("stonetostone.enabled", "true");
-        defaults.put("stonetostone.item", "glowstone_dust");
-        defaults.put("stonetostone.maxUses", 10);
+        // TODO: Considering adding support back in for this.. not sure.
+        defaults.put("minProximityToStoneForTeleport", 0);
 
         defaults.put("effects.lightningOnCreate", true);
         defaults.put("effects.lightningOnBreak", true);
@@ -72,18 +68,15 @@ public class Config {
         defaults.put("lang.memorize", "Memorized: <name>");
         defaults.put("lang.alreadymemorized", "You have already memorized: <name>");
         defaults.put("lang.notfound", "<name> could not be found");
+        defaults.put("lang.notcrossworld", "<name> in a different world, and not a crossworld memory stone.");
         defaults.put("lang.cooldown", "Teleport cooling down (<left>s)");
         defaults.put("lang.startrecall", "Starting recall to <name>");
         defaults.put("lang.cancelled", "Recall cancelled");
-        defaults.put("lang.chargesleft", "You have <numcharges> left on your <material>");
-        defaults.put("lang.consumed", "You have worn your <material> out!");
+        defaults.put("lang.noreagent", "You need a <material> to teleport!");
         defaults.put("lang.teleportingother", "Teleporting <name> to <destination>");
         defaults.put("lang.teleportedbyother", "<name> is teleporting you to <destination>");
         defaults.put("lang.teleporting", "Teleporting to <destination>");
-        defaults.put("lang.noteleportzone", "You are in a no teleport zone. Cannot teleport out.");
         defaults.put("lang.teleportitemnotfound", "You need to have a <material> to teleport");
-
-        defaults.put("lang.stonetostone.itemmissing", "You need some <material> to teleport from this memory stone");
 
         defaults.put("lang.nobuildpermission", "&EYou do not have permission to build memory stones.");
         defaults.put("lang.nobreakpermission", "&EYou do not have permission to break memory stones.");
@@ -95,14 +88,9 @@ public class Config {
         defaults.put("lang.notexist", "<name> no longer exists as a destination");
         defaults.put("lang.notmemorized", "No Memorized recalling");
         defaults.put("lang.signboard", "&AMemory Stone");
+        defaults.put("lang.broken-noname", "&C[No Name]");
         defaults.put("lang.broken", "&C[Broken]");
         defaults.put("lang.duplicate", "&C[Duplicate]");
-
-        defaults.put("lang.outsideproximity", "You are not close enough to a memory stone to teleport.");
-        defaults.put("lang.insidememorizationdistance", "As you approach <name> you take note of its location.");
-        // not used yet. needs thinking about how to use this message without spamming
-        // defaults.put("lang.insidememorizationdistancenotfree",
-        // "You notice that <name> has a memorization cost of  : <cost>");
 
         defaults.put("lang.compassinterference", "Something strange is happening with your compass");
         defaults.put("lang.compasslostinterference", "Your compass returns to normal");
@@ -140,16 +128,19 @@ public class Config {
         return Utility.color(result);
     }
 
-    public static int getMaxUsesPerItem() {
-        return conf.getInt("maxUsesPerItem", 0);
-    }
-
     public static boolean isEffectEnabled(MemoryEffect effect) {
         return conf.getBoolean(effect.effectConf, true);
     }
 
     public static Material getTeleportItem() {
         String materialString = conf.getString("teleportItem");
+
+        if (materialString == null) { return null; }
+        return Material.getMaterial(materialString);
+    }
+
+    public static Material getReagentItem() {
+        String materialString = conf.getString("reagentItem");
 
         if (materialString == null) { return null; }
         return Material.getMaterial(materialString);
@@ -175,28 +166,6 @@ public class Config {
         return conf.getInt("minProximityToStoneForTeleport", 0);
     }
 
-    public static int getAutomaticMemorizationDistanceSquared() {
-        int temp = conf.getInt("automaticMemorizationDistance", 0);
-        temp = temp * temp;
-        return temp;
-    }
-
-    public static boolean isStoneToStoneEnabled() {
-        return conf.getBoolean("stonetostone.enabled", true);
-    }
-
-    public static Material getStoneToStoneItem() {
-        String materialString = conf.getString("stonetostone.item");
-
-        if (materialString == null) { return getTeleportItem(); }
-
-        return Material.getMaterial(materialString);
-    }
-
-    public static int getStoneToStoneMaxUses() {
-        return conf.getInt("stonetostone.maxUses", 10);
-    }
-
     public static boolean isPointCompassOnly() {
         return conf.getBoolean("pointCompassOnly", false);
     }
@@ -205,9 +174,5 @@ public class Config {
         int temp = conf.getInt("compassToUnmemorizedStoneDistance", 32);
         temp = temp * temp;
         return temp;
-    }
-
-    public static boolean isIgnoreStructure() {
-        return conf.getBoolean("ignoreStructure", true);
     }
 }

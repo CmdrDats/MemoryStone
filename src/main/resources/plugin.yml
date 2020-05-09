@@ -22,31 +22,19 @@ permissions:
   memorystone.op:
     description: gives access to instant, cooldownless casting
     children:
-      memorystone.usewithoutcooldown: true
       memorystone.break: true
-      memorystone.useinstantly: true
-      memorystone.useanywhere: true
   memorystone.build:
     description: allows user to build Memory Stones
     default: true
   memorystone.break:
-    description: allows user to break Memory Stones
+    description: allows user to break others' Memory Stones (They can always break their own)
     default: true
   memorystone.use:
     description: allows user to teleport
     default: true
-  memorystone.usestonetostone:
-    description: allows user to use stone to stone teleportation
-    default: true
   memorystone.useonothers:
     description: allows user to teleport others
     default: true
-  memorystone.usewithoutcooldown:
-    description: allows user to teleport without cooldowns
-    default: false
-  memorystone.useinstantly:
-    description: allows user to teleport without casting time
-    default: false
   memorystone.allmemorized:
     description: allows user to teleport to any stone without first memorizing it.
     default: false
@@ -61,7 +49,6 @@ permissions:
       memorystone.create.global: true
       memorystone.create.crossworld: true
       memorystone.create.crossworldglobal: true
-      memorystone.create.noteleport: true
   memorystone.create.local:
     description: Create local memory stones
     default: true
@@ -73,8 +60,5 @@ permissions:
     default: true
   memorystone.create.crossworldglobal:
     description: Create crossworld global memory stones
-    default: true
-  memorystone.create.noteleport:
-    description: Create noteleport zone stones.
     default: true
 

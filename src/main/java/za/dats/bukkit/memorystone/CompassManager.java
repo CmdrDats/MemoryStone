@@ -2,18 +2,15 @@ package za.dats.bukkit.memorystone;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
+import org.bukkit.Effect;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
@@ -86,12 +83,13 @@ public class CompassManager implements Listener {
         }
 
         String playerName = player.getName();
-        boolean hasPermission = player.hasPermission("memorystone.allmemorized");
-        if (hasPermission) {
+        if (player.hasPermission("memorystone.allmemorized")) {
             Collection<? extends MemoryStone> localStones = plugin.getMemoryStoneManager().getLocalStones(world);
-            for (MemoryStone memoryStone : localStones) {
-                if (memoryStone.getSign() != null) {
-                    result.add(memoryStone);
+            if (localStones != null) {
+                for (MemoryStone memoryStone : localStones) {
+                    if (memoryStone.getSign() != null) {
+                        result.add(memoryStone);
+                    }
                 }
             }
         } else {
@@ -102,10 +100,11 @@ public class CompassManager implements Listener {
             }
 
             for (MemoryStone memoryStone : set) {
-                if (memoryStone.isCrossWorld()) {
+                if (memoryStone.isCrossWorld()
+                        && memoryStone.getStructure().getWorld() != player.getWorld()) {
                     result.add(memoryStone);
                 } else if (world.equals(memoryStone.getStructure().getWorld().getName())) {
-                    addIfWithinDistance(player, result, memoryStone);
+                    result.add(memoryStone);
                 }
             }
         }
@@ -114,31 +113,18 @@ public class CompassManager implements Listener {
             if (memoryStone.isCrossWorld()) {
                 result.add(memoryStone);
             } else if (world.equals(memoryStone.getStructure().getWorld().getName())) {
-                addIfWithinDistance(player, result, memoryStone);
+                result.add(memoryStone);
             }
         }
 
         return result;
     }
 
-    private void addIfWithinDistance(final Player player, TreeSet<MemoryStone> result, MemoryStone memoryStone) {
-        if (memoryStone.getDistanceLimit() <= 0) {
-            result.add(memoryStone);
-        } else {
-            if (memoryStone.getSign() == null) {
-                return;
-            }
-
-            double distance = player.getLocation().distanceSquared(memoryStone.getSign().getBlock().getLocation());
-            if (distance < memoryStone.getDistanceLimit()) {
-                result.add(memoryStone);
-            }
-        }
-    }
-
     public void forgetStone(String name, boolean showMessage) {
         MemoryStone stone = plugin.getMemoryStoneManager().getNamedMemoryStone(name);
-        if (stone == null) { return; }
+        if (stone == null) {
+            return;
+        }
 
         for (String player : selected.keySet()) {
             if (name.equals(selected.get(player))) {
@@ -169,19 +155,18 @@ public class CompassManager implements Listener {
     }
 
     public boolean memorizeStone(PlayerInteractEvent event) {
+        if (event.getClickedBlock() == null) {
+            return false;
+        }
+
         Sign state = (Sign) event.getClickedBlock().getState();
         MemoryStone stone = plugin.getMemoryStoneManager().getMemoryStructureForSign(state);
         return memorizeStone(event.getPlayer(), stone);
     }
 
     public boolean memorizeStone(Player player, MemoryStone stone) {
-
         if (player != null && stone != null && stone.getSign() != null) {
             if (stone.isGlobal()) {
-                if (Config.isStoneToStoneEnabled()) {
-                    return false;
-                }
-
                 player.sendMessage(Config.getColorLang("alreadymemorized", "name", stone.getName()));
                 return true;
             }
@@ -193,10 +178,6 @@ public class CompassManager implements Listener {
             }
 
             if (set.contains(stone)) {
-                if (Config.isStoneToStoneEnabled()) {
-                    return false;
-                }
-
                 player.sendMessage(Config.getColorLang("alreadymemorized", "name", stone.getName()));
                 return true;
             }
@@ -218,11 +199,7 @@ public class CompassManager implements Listener {
             return false;
         }
 
-        if (set.contains(stone)) {
-            return true;
-        }
-
-        return false;
+        return set.contains(stone);
     }
 
     public void loadLocations() {
@@ -231,25 +208,31 @@ public class CompassManager implements Listener {
             return;
         }
         YamlConfiguration conf = YamlConfiguration.loadConfiguration(file);
-
-        Map<String, Set<String>> memLoad = (Map<String, Set<String>>) conf.getMapList("memorized");
-        for (String player : memLoad.keySet()) {
-            Set<String> stones = memLoad.get(player);
-            Set<MemoryStone> stoneList = new TreeSet<MemoryStone>();
-            for (String stoneName : stones) {
-                MemoryStone stone = plugin.getMemoryStoneManager().getNamedMemoryStone(stoneName);
-                if (stone != null) {
-                    stoneList.add(stone);
+        ConfigurationSection memorizedSection = conf.getConfigurationSection("memorized");
+        if (memorizedSection != null) {
+            for (String player : memorizedSection.getKeys(false)) {
+                Set<String> stones = (Set<String>) memorizedSection.get(player);
+                if (stones == null) {
+                    stones = new TreeSet<String>();
                 }
+
+                Set<MemoryStone> stoneList = new TreeSet<MemoryStone>();
+                for (String stoneName : stones) {
+                    MemoryStone stone = plugin.getMemoryStoneManager().getNamedMemoryStone(stoneName);
+                    if (stone != null) {
+                        stoneList.add(stone);
+                    }
+                }
+                memorized.put(player, stoneList);
             }
-            memorized.put(player, stoneList);
         }
 
-        Map<String, String> selLoad = (Map<String, String>) conf.getMapList("selected");
-        for (String player : selLoad.keySet()) {
-            selected.put(player, selLoad.get(player));
+        ConfigurationSection selLoad = conf.getConfigurationSection("selected");
+        if (selLoad != null) {
+            for (String player : selLoad.getKeys(false)) {
+                selected.put(player, selLoad.getString(player));
+            }
         }
-
     }
 
     public void saveLocations() {
@@ -323,71 +306,83 @@ public class CompassManager implements Listener {
         return result;
     }
 
-    public void startTeleport(final MemoryStone stone, final Player caster, ItemStack item, int maxUses, int itemIndex,
-                              Player other) {
-        // check permissions!
-        if (!caster.hasPermission("memorystone.usefree") && item != null) {
-            if ((maxUses > 0) && (item.getDurability() == 0 || item.getDurability() > maxUses)) {
-                item.setDurability((short) Config.getMaxUsesPerItem());
-            }
+    public boolean checkCooldown(Player caster, Teleport teleport) {
+        long now = new Date().getTime();
+        if (now - teleport.lastTeleportTime < Config.getCooldownTime() * 1000) {
+            long left = Config.getCooldownTime() - ((now - teleport.lastTeleportTime) / 1000);
+            caster.sendMessage(Config.getColorLang("cooldown", "left", "" + left));
+            return false;
         }
 
+        if (now - teleport.lastFizzleTime < Config.getFizzleCooldownTime() * 1000) {
+            long left = Config.getFizzleCooldownTime() - ((now - teleport.lastFizzleTime) / 1000);
+            caster.sendMessage(Config.getColorLang("cooldown", "left", "" + left));
+            return false;
+        }
+        return true;
+    }
+
+    public boolean consumeReagent(Player caster) {
+        if (Config.getReagentItem() == null) {
+            return true;
+        }
+
+        int reagent = caster.getInventory().first(Config.getReagentItem());
+        if (reagent == -1) {
+            caster.sendMessage(Config.getColorLang("noreagent", "material", Config.getReagentItem().toString().toLowerCase()));
+            return false;
+        }
+
+        ItemStack item = caster.getInventory().getItem(reagent);
+        if (item == null) {
+            caster.sendMessage(Config.getColorLang("noreagent", "material", Config.getReagentItem().toString().toLowerCase()));
+            return false;
+        }
+
+        if (item.getAmount() == 1) {
+            caster.getInventory().setItem(reagent, null);
+        } else {
+            item.setAmount(item.getAmount() - 1);
+        }
+
+        return true;
+    }
+
+    public void startTeleport(final MemoryStone stone, final Player caster, Player target) {
+        // check permissions!
+
         final String name = stone.getName();
-        final Sign sign = (Sign) stone.getSign();
+        final Sign sign = stone.getSign();
         if (sign == null) {
             caster.sendMessage(Config.getColorLang("notfound", "name", name));
             return;
         }
 
+        if (!stone.isCrossWorld() && !caster.getWorld().equals(stone.getSign().getBlock().getWorld())) {
+            caster.sendMessage(Config.getColorLang("notcrossworld", "name", name));
+            return;
+        }
+
         Teleport teleport = getTeleport(caster);
 
-        if (!caster.hasPermission("memorystone.usewithoutcooldown")) {
-            long now = new Date().getTime();
-            if (now - teleport.lastTeleportTime < Config.getCooldownTime() * 1000) {
-                long left = Config.getCooldownTime() - ((now - teleport.lastTeleportTime) / 1000);
-                caster.sendMessage(Config.getColorLang("cooldown", "left", "" + left));
-                return;
-            }
-
-            if (now - teleport.lastFizzleTime < Config.getFizzleCooldownTime() * 1000) {
-                long left = Config.getFizzleCooldownTime() - ((now - teleport.lastFizzleTime) / 1000);
-                caster.sendMessage(Config.getColorLang("cooldown", "left", "" + left));
-                return;
-            }
+        if (!checkCooldown(caster, teleport)) {
+            return;
+        }
+        if (!consumeReagent(caster)) {
+            return;
         }
 
-        if (other.equals(caster)) {
+        if (target.equals(caster)) {
             caster.sendMessage(Config.getColorLang("startrecall", "name", stone.getName()));
         } else {
-            caster.sendMessage(Config.getColorLang("teleportingother", "name", other.getName(), "destination", name));
-            other.sendMessage(Config.getColorLang("teleportedbyother", "name", caster.getName(), "destination", name));
-
-        }
-
-        if (maxUses > 0 && (!caster.hasPermission("memorystone.usefree")) && item != null) {
-            item.setDurability((short) (item.getDurability() - 1));
-
-            if (item.getDurability() == 0) {
-                if (item.getAmount() == 1) {
-                    // caster.setItemInHand(null);
-                    caster.getInventory().setItem(itemIndex, null);
-                    // item.setDurability((short)11);
-                    // player.getInventory().remove(item);
-                } else {
-                    item.setDurability((short) maxUses);
-                    item.setAmount(item.getAmount() - 1);
-                }
-                caster.sendMessage(Config.getColorLang("consumed", "material", item.getType().toString().toLowerCase()));
-            } else {
-                caster.sendMessage(Config.getColorLang("chargesleft", "numcharges", "" + item.getDurability(),
-                        "material", item.getType().toString().toLowerCase()));
-            }
+            caster.sendMessage(Config.getColorLang("teleportingother", "name", target.getName(), "destination", name));
+            target.sendMessage(Config.getColorLang("teleportedbyother", "name", caster.getName(), "destination", name));
         }
 
         int waitTime = Config.getCastingTime() * 10;
-        if (caster.hasPermission("memorystone.useinstantly")) {
-            waitTime = 1;
-        }
+
+        target.getWorld().playEffect(caster.getLocation(), Effect.SMOKE, BlockFace.UP);
+        target.getWorld().playSound(caster.getLocation(), Sound.ENTITY_EVOKER_CAST_SPELL, 1F, 1F);
 
         int task = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
             public void run() {
@@ -399,7 +394,7 @@ public class CompassManager implements Listener {
                 }
 
                 if (!teleport.teleportEntity.equals(caster)) {
-                    Teleport other = getTeleport((Player) teleport.teleportEntity);
+                    Teleport other = getTeleport(teleport.teleportEntity);
                     other.taskId = -1;
                     other.started = false;
                     if (other.cancelled) {
@@ -420,9 +415,8 @@ public class CompassManager implements Listener {
                     teleport.teleportEntity.getWorld().strikeLightningEffect(destination);
                 }
 
-                if (Config.isPointCompassOnly()) {
-                    teleport.teleportEntity.setCompassTarget(destination);
-                } else {
+                teleport.teleportEntity.setCompassTarget(destination);
+                if (!Config.isPointCompassOnly()) {
                     teleport.teleportEntity.teleport(destination);
                 }
 
@@ -432,21 +426,24 @@ public class CompassManager implements Listener {
         teleport.cancelled = false;
         teleport.taskId = task;
         teleport.started = true;
-        teleport.teleportEntity = other;
+        teleport.teleportEntity = target;
 
         if (!teleport.teleportEntity.equals(caster)) {
-            Teleport otherTeleport = getTeleport((Player) teleport.teleportEntity);
+            Teleport otherTeleport = getTeleport(teleport.teleportEntity);
             otherTeleport.cancelled = false;
             otherTeleport.taskId = task;
             otherTeleport.started = true;
-            otherTeleport.teleportEntity = other;
+            otherTeleport.teleportEntity = target;
         }
     }
+
 
     public void cancelTeleport(Player player) {
         Teleport teleport = getTeleport(player);
         if (teleport.started && teleport.taskId > -1) {
             player.sendMessage(Config.getColorLang("cancelled"));
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1F, 1F);
+
             teleport.cancelled = true;
             plugin.getServer().getScheduler().cancelTask(teleport.taskId);
             teleport.started = false;
@@ -461,7 +458,7 @@ public class CompassManager implements Listener {
             return;
         }
 
-        if (event.getPlayer().getItemInHand().getType() != Config.getTeleportItem()) {
+        if (!event.getPlayer().getInventory().getItemInMainHand().getType().equals(Config.getTeleportItem())) {
             return;
         }
 
@@ -481,13 +478,6 @@ public class CompassManager implements Listener {
         }
         teleport.lastEventTime = now;
 
-        if (!(event.getPlayer().hasPermission("memorystone.useanywhere") || Config.getMinProximityToStoneForTeleport() == 0)) {
-            if (!withinDistanceOfAnyStone(event.getPlayer(), Config.getMinProximityToStoneForTeleport())) {
-                event.getPlayer().sendMessage(Config.getColorLang("outsideproximity"));
-                return;
-            }
-        }
-
         String name = selected.get(event.getPlayer().getName());
         tryTeleportOther(event, event.getPlayer(), name);
     }
@@ -505,61 +495,11 @@ public class CompassManager implements Listener {
             Player other = (Player) event.getRightClicked();
             cancelTeleport(other);
 
-            startTeleport(stone, event.getPlayer(), p.getItemInHand(), Config.getMaxUsesPerItem(), p.getInventory()
-                    .getHeldItemSlot(), other);
+            startTeleport(stone, event.getPlayer(), other);
         } else {
             event.getPlayer().sendMessage(Config.getColorLang("notmemorized"));
 
         }
-    }
-
-    public void fireTeleportFromBlock(Block clickedBlock, Player player) {
-        MemoryStone clickedStone = null;
-        if (Config.isStoneToStoneEnabled() && player.hasPermission("memorystone.usestonetostone")
-                && (clickedBlock != null) && (clickedBlock.getState() instanceof Sign)) {
-            Sign state = (Sign) clickedBlock.getState();
-            clickedStone = plugin.getMemoryStoneManager().getMemoryStructureForSign(state);
-        }
-
-        ItemStack consumeItem = null;
-        int maxUses = 0;
-        int itemIndex = -1;
-        if (clickedStone == null) {
-            consumeItem = player.getItemInHand();
-            maxUses = Config.getMaxUsesPerItem();
-            itemIndex = player.getInventory().getHeldItemSlot();
-
-            if (Config.getTeleportItem() == null || !Config.getTeleportItem().equals(consumeItem.getType())) {
-                return;
-            }
-        } else if (Config.getStoneToStoneItem() != null) {
-            itemIndex = player.getInventory().first(Config.getStoneToStoneItem());
-            if (itemIndex >= 0) {
-                consumeItem = player.getInventory().getItem(itemIndex);
-                maxUses = Config.getStoneToStoneMaxUses();
-            }
-
-            if (consumeItem == null) {
-                player.sendMessage(Config.getColorLang("stonetostone.itemmissing", "material", Config
-                        .getStoneToStoneItem().toString().toLowerCase()));
-                return;
-            }
-        }
-
-        fireTeleportWithItem(consumeItem, maxUses, itemIndex, clickedStone, player);
-    }
-
-    public void fireTeleportWithItem(final ItemStack item, final int maxUses, final int itemIndex,
-                                     final MemoryStone ignoreStone, final Player player) {
-        if (!(player.hasPermission("memorystone.useanywhere") || Config.getMinProximityToStoneForTeleport() == 0)) {
-            if (!withinDistanceOfAnyStone(player, Config.getMinProximityToStoneForTeleport())) {
-                player.sendMessage(Config.getColorLang("outsideproximity"));
-                return;
-            }
-        }
-
-        String name = selected.get(player.getName());
-        tryTeleport(player, item, maxUses, itemIndex, name);
     }
 
     @EventHandler
@@ -568,6 +508,10 @@ public class CompassManager implements Listener {
 
         // check permissions!
         if (!player.hasPermission("memorystone.use")) {
+            return;
+        }
+
+        if (!player.getInventory().getItemInMainHand().getType().equals(Config.getTeleportItem())) {
             return;
         }
 
@@ -605,15 +549,18 @@ public class CompassManager implements Listener {
                 return;
             }
 
-            fireTeleportFromBlock(event.getClickedBlock(), player);
-
+            String name = selected.get(player.getName());
+            tryTeleport(player, name);
         }
     }
 
     private void cycleTeleport(final PlayerInteractEvent event, Player player, Teleport teleport) {
+        if (event.getPlayer().getInventory().getItemInMainHand().getType() != Config.getTeleportItem()) {
+            return;
+        }
+
         // Make interaction with interactable blocks cleaner
-        if (event.getClickedBlock() != null
-                && event.getClickedBlock().getType().isInteractable()) {
+        if (event.getClickedBlock() != null && event.getClickedBlock().getType().isInteractable()) {
             return;
         }
 
@@ -621,31 +568,9 @@ public class CompassManager implements Listener {
             return;
         }
 
-        MemoryStone clickedStone = null;
-        if (event.getPlayer().getItemInHand().getType() != Config.getTeleportItem()) {
-            if (Config.isStoneToStoneEnabled() && (event.getClickedBlock() != null)
-                    && (event.getClickedBlock().getState() instanceof Sign)
-                    && player.hasPermission("memorystone.usestonetostone")) {
-                Sign state = (Sign) event.getClickedBlock().getState();
-                clickedStone = plugin.getMemoryStoneManager().getMemoryStructureForSign(state);
-                if (clickedStone == null) {
-                    return;
-                }
-            } else {
-                return;
-            }
-        }
-
         Set<MemoryStone> memory = getPlayerLocations(player.getWorld().getName(), player);
         if (memory == null || memory.size() == 0) {
             return;
-        }
-
-        if (clickedStone != null) {
-            memory.remove(clickedStone);
-            if (memory.size() == 0) {
-                return;
-            }
         }
 
         String selectedName = selected.get(player.getName());
@@ -678,36 +603,17 @@ public class CompassManager implements Listener {
         event.setCancelled(true);
     }
 
-    private boolean withinDistanceOfAnyStone(Player player, int minProximityToStoneForTeleport) {
-        minProximityToStoneForTeleport = minProximityToStoneForTeleport * minProximityToStoneForTeleport;
-        for (MemoryStone stone : plugin.getMemoryStoneManager().getStones()) {
-            if (stone.getSign() == null) {
-                continue;
-            }
-
-            if (!stone.getSign().getWorld().getName().equals(player.getWorld().getName())) {
-                continue;
-            }
-
-            if (player.getLocation().distanceSquared(stone.getSign().getBlock().getLocation()) < minProximityToStoneForTeleport) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void tryTeleport(Player p, ItemStack item, int maxUses, int itemIndex, String name) {
-        if (name != null) {
-            MemoryStone stone = plugin.getMemoryStoneManager().getNamedMemoryStone(name);
+    private void tryTeleport(Player p, String stoneName) {
+        if (stoneName != null) {
+            MemoryStone stone = plugin.getMemoryStoneManager().getNamedMemoryStone(stoneName);
             if (stone == null) {
-                p.sendMessage(Config.getColorLang("notexist", "name", name));
-                forgetStone(name, false);
+                p.sendMessage(Config.getColorLang("notexist", "name", stoneName));
+                forgetStone(stoneName, false);
                 return;
             }
 
             cancelTeleport(p);
-            startTeleport(stone, p, item, maxUses, itemIndex, p);
-
+            startTeleport(stone, p, p);
         } else {
             p.sendMessage(Config.getColorLang("notmemorized"));
         }
@@ -717,7 +623,8 @@ public class CompassManager implements Listener {
     public void onPlayerMove(PlayerMoveEvent event) {
         Teleport teleport = getTeleport(event.getPlayer());
         if (teleport.started) {
-            if ((event.getFrom().getBlockX() != event.getTo().getBlockX())
+            if (event.getTo() == null
+                    || (event.getFrom().getBlockX() != event.getTo().getBlockX())
                     || (event.getFrom().getBlockY() != event.getTo().getBlockY())
                     || (event.getFrom().getBlockZ() != event.getTo().getBlockZ())) {
 
@@ -736,9 +643,7 @@ public class CompassManager implements Listener {
             interferences.put(player.getName(), interference);
         }
 
-        if (!interference.isTooClose(event.getTo())) {
-            interference.update(player, event);
-        }
+        interference.update(player, event);
     }
 
 }

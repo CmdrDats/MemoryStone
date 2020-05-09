@@ -20,14 +20,14 @@ public interface StructureListener {
      *
      * @param structure
      */
-    public void structurePlaced(Player player, Structure structure);
+    void structurePlaced(Player player, Structure structure);
 
     /**
      * A structure has been destroyed
      *
      * @param structure
      */
-    public void structureDestroyed(Player player, Structure structure);
+    void structureDestroyed(Player player, Structure structure);
 
     /**
      * A structure was loaded from disk. Use the configuration node to load
@@ -35,7 +35,7 @@ public interface StructureListener {
      *
      * @param structure
      */
-    public void structureLoaded(Structure structure, Map<String, Object> node);
+    void structureLoaded(Structure structure, Map<String, Object> node);
 
     /**
      * Structure is being saved to disk, add extra structure information to save with it
@@ -44,13 +44,13 @@ public interface StructureListener {
      * @param structure
      * @param yamlMap
      */
-    public void structureSaving(Structure structure, Map<String, Object> yamlMap);
+    void structureSaving(Structure structure, Map<String, Object> yamlMap);
 
     /**
      * Add your own default structure types in here.
      *
      * @param types
      */
-    public void generatingDefaultStructureTypes(List<StructureType> types);
+    void generatingDefaultStructureTypes(List<StructureType> types);
 
 }

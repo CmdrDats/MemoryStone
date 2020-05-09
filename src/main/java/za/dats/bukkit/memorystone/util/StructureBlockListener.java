@@ -5,7 +5,6 @@ import java.util.Set;
 
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -46,7 +45,7 @@ public class StructureBlockListener implements Listener {
             return;
         }
 
-        Structure block = checkPlacedBlock(event.getPlayer(), event.getBlock(), event);
+        checkPlacedBlock(event.getPlayer(), event.getBlock(), event);
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -62,8 +61,15 @@ public class StructureBlockListener implements Listener {
 
         Player player = event.getPlayer();
 
+        boolean allowner = true;
+        for (Structure structure : totems) {
+            if (!player.getName().equals(structure.getOwner())) {
+                allowner = false;
+            }
+        }
+
         // check permissions!
-        if (!player.hasPermission("memorystone.break")) {
+        if (!player.hasPermission("memorystone.break") && !allowner) {
             event.setCancelled(true);
             player.sendMessage(Config.getColorLang("nobreakpermission"));
             return;
@@ -97,10 +103,9 @@ public class StructureBlockListener implements Listener {
         }
     }
 
-    public Structure checkPlacedBlock(Player player, Block behind, BlockPlaceEvent event) {
+    public Structure checkPlacedBlock(Player player, Block placedblock, BlockPlaceEvent event) {
         String owner = player.getName();
 
-        Block placedblock = behind;
         List<StructureType> structureTypes = structureManager.getStructureTypes();
 
         TOTEMBUILD:

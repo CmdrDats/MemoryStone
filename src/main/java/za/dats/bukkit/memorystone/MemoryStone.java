@@ -6,13 +6,12 @@ import za.dats.bukkit.memorystone.util.structure.Structure;
 
 public class MemoryStone implements Comparable<MemoryStone> {
     public enum StoneType {
-        MEMORYSTONE, NOTELEPORT
+        MEMORYSTONE
     }
 
     private Structure structure;
     private Sign sign;
     private String name;
-    private double distanceLimit;
     private StoneType type = StoneType.MEMORYSTONE;
 
     public Structure getStructure() {
@@ -21,24 +20,9 @@ public class MemoryStone implements Comparable<MemoryStone> {
 
     public void setStructure(Structure structure) {
         this.structure = structure;
-        try {
-            if (structure.getStructureType().getMetadata().containsKey("distanceLimit")) {
-                distanceLimit = Double.parseDouble(structure.getStructureType().getMetadata().get("distanceLimit"));
-                distanceLimit = distanceLimit * distanceLimit; // pre square it.
-            } else {
-                distanceLimit = 0;
-            }
-
-        } catch (NumberFormatException nfe) {
-            distanceLimit = 0;
-        }
 
         if (structure.getStructureType().getMetadata().containsKey("type")) {
-
-            StoneType newType = StoneType.valueOf(structure.getStructureType().getMetadata().get("type"));
-            if (newType != null) {
-                type = newType;
-            }
+            type = StoneType.valueOf(structure.getStructureType().getMetadata().get("type"));
         }
     }
 
@@ -100,23 +84,11 @@ public class MemoryStone implements Comparable<MemoryStone> {
     }
 
     public boolean isGlobal() {
-        if ("true".equals(structure.getStructureType().getMetadata().get("global"))) {
-            return true;
-        }
-
-        return false;
+        return "true".equals(structure.getStructureType().getMetadata().get("global"));
     }
 
     public boolean isCrossWorld() {
-        if ("true".equals(structure.getStructureType().getMetadata().get("crossworld"))) {
-            return true;
-        }
-
-        return false;
-    }
-
-    public double getDistanceLimit() {
-        return distanceLimit;
+        return "true".equals(structure.getStructureType().getMetadata().get("crossworld"));
     }
 
     public StoneType getType() {
