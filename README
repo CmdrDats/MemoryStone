@@ -5,7 +5,14 @@ This plugin for minecraft Bukkit lets you create Memory Stone structures. You ca
 
 ChangeLog:
 ----------
-1.1.2
+2.0.0 (May 2020)
+    - MASSIVE BREAKING UPDATE. Implement and test like a whole new mod on your server.
+    - Bring project up to date with Spigot 1.15.2.
+    - Tore out most of the features that weren't really part of the core value proposition
+    - Implemented a reagent consumed on teleporting.
+    - Refactor.
+
+1.1.2 (October 2011)
 	- @ryantheleach added auto-memorization support
 	
 1.1.1
